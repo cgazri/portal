@@ -22,7 +22,7 @@
             </h1>
             <div class="flex items-center gap-3">
                 <button onclick="openTeacherAdmin()" class="text-xs bg-indigo-700 hover:bg-indigo-800 text-white px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1">
-                    📊 Panel Guru (Data Pelajar)
+                    📊 Panel Guru
                 </button>
                 <div id="nav-breadcrumb" class="text-sm bg-indigo-800 px-3 py-1.5 rounded-full hidden md:block">
                     Halaman Utama
@@ -157,7 +157,7 @@
 
         <div id="portal-view" class="space-y-8">
             <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white p-8 rounded-3xl shadow-md">
-                <h2 class="text-3xl font-extrabold mb-2">Selamat Datang ke Hub Interaktif!</h2>
+                <h2 class="text-3xl font-extrabold mb-2">Selamat Datang ke Hub Cg Azri!</h2>
                 <p class="text-indigo-100 text-sm max-w-2xl">Pilih kategori pembelajaran atau modul di bawah untuk memulakan aktiviti interaktif anda.</p>
             </div>
             <div class="space-y-4">
@@ -192,6 +192,30 @@
                     <h3 class="text-xl font-bold text-slate-900">Kategori Utama Lain</h3>
                 </div>
                 <div class="bg-white p-6 rounded-2xl border border-dashed border-slate-300 text-center text-slate-500 text-sm">Kategori dan modul interaktif baharu akan ditambah dari semasa ke semasa.</div>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
+                    <span class="text-xl">🧠</span>
+                    <h3 class="text-xl font-bold text-slate-900">Permainan Minda</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button type="button" onclick="openMindGames()" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition">
+                        <span class="text-2xl">🌍</span>
+                        <h4 class="font-bold text-slate-900 mt-3">Bendera Dunia</h4>
+                        <p class="text-slate-600 text-xs mt-1">Kenal pasti bendera negara secara rawak.</p>
+                    </button>
+                    <button type="button" onclick="openMindGames()" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition">
+                        <span class="text-2xl">🇲🇾</span>
+                        <h4 class="font-bold text-slate-900 mt-3">Misi Malaysia</h4>
+                        <p class="text-slate-600 text-xs mt-1">Uji pengetahuan tentang negara dan negeri.</p>
+                    </button>
+                    <button type="button" onclick="openMindGames()" class="text-left bg-white p-5 rounded-2xl border border-slate-200 hover:border-amber-400 hover:shadow-md transition">
+                        <span class="text-2xl">🔢</span>
+                        <h4 class="font-bold text-slate-900 mt-3">Corak Logik</h4>
+                        <p class="text-slate-600 text-xs mt-1">Cari aturan nombor dan selesaikan teka-teki.</p>
+                    </button>
+                </div>
+                <button type="button" onclick="openMindGames()" class="text-sm font-semibold text-indigo-700 hover:underline">Pilih permainan →</button>
             </div>
         </div>
 
@@ -254,6 +278,85 @@
             </div>
         </div>
 
+        <div id="mind-games-view" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-4">
+                <div>
+                    <button type="button" onclick="goToPortal()" class="text-sm text-indigo-700 font-semibold hover:underline">← Kembali ke Portal</button>
+                    <h2 class="text-2xl font-bold text-slate-900 mt-2">Permainan Minda</h2>
+                </div>
+                <div class="text-xs text-slate-500">8 soalan rawak · pilih tahap cabaran</div>
+            </div>
+
+            <div id="games-menu" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button type="button" onclick="selectMindGame('flags')" class="text-left bg-white p-6 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition">
+                    <span class="text-3xl">🌍</span>
+                    <h3 class="text-lg font-bold text-slate-900 mt-3">Bendera Dunia</h3>
+                    <p class="text-sm text-slate-600 mt-1">Padankan bendera dengan negara. Soalan dipilih daripada senarai bendera dunia.</p>
+                    <span class="inline-block mt-4 text-xs font-semibold text-indigo-700">Pilih game →</span>
+                </button>
+                <button type="button" onclick="selectMindGame('malaysia')" class="text-left bg-white p-6 rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition">
+                    <span class="text-3xl">🇲🇾</span>
+                    <h3 class="text-lg font-bold text-slate-900 mt-3">Misi Malaysia</h3>
+                    <p class="text-sm text-slate-600 mt-1">Uji fakta negara, sejarah dan geografi Malaysia.</p>
+                    <span class="inline-block mt-4 text-xs font-semibold text-emerald-700">Pilih game →</span>
+                </button>
+                <button type="button" onclick="selectMindGame('logic')" class="text-left bg-white p-6 rounded-2xl border border-slate-200 hover:border-amber-400 hover:shadow-md transition">
+                    <span class="text-3xl">🔢</span>
+                    <h3 class="text-lg font-bold text-slate-900 mt-3">Corak Logik</h3>
+                    <p class="text-sm text-slate-600 mt-1">Cari aturan tersembunyi dalam pola nombor dan teka-teki.</p>
+                    <span class="inline-block mt-4 text-xs font-semibold text-amber-700">Pilih game →</span>
+                </button>
+            </div>
+
+            <section id="game-setup" class="hidden max-w-2xl mx-auto bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 space-y-6">
+                <div>
+                    <button type="button" onclick="showGamesMenu()" class="text-sm text-indigo-700 font-semibold hover:underline">← Pilih permainan lain</button>
+                    <h3 id="game-setup-title" class="text-2xl font-bold text-slate-900 mt-3"></h3>
+                    <p id="game-setup-description" class="text-sm text-slate-600 mt-1"></p>
+                </div>
+                <fieldset>
+                    <legend class="text-sm font-semibold text-slate-800 mb-3">Tahap cabaran</legend>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" data-game-level="low" onclick="setGameLevel('low')" class="game-level-button p-3 rounded-xl border-2 border-slate-200 text-sm font-semibold hover:border-emerald-400">Rendah</button>
+                        <button type="button" data-game-level="medium" onclick="setGameLevel('medium')" class="game-level-button p-3 rounded-xl border-2 border-indigo-500 bg-indigo-50 text-sm font-semibold">Sederhana</button>
+                        <button type="button" data-game-level="high" onclick="setGameLevel('high')" class="game-level-button p-3 rounded-xl border-2 border-slate-200 text-sm font-semibold hover:border-rose-400">Tinggi</button>
+                    </div>
+                </fieldset>
+                <button id="start-game-button" type="button" onclick="startMindGame()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition">Mula Bermain</button>
+                <p id="game-load-error" class="hidden text-sm text-rose-600" role="alert"></p>
+            </section>
+
+            <section id="game-play" class="hidden max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-200 bg-slate-50">
+                    <div>
+                        <p id="game-level-label" class="text-xs font-semibold text-indigo-700"></p>
+                        <h3 id="game-play-title" class="font-bold text-slate-900"></h3>
+                    </div>
+                    <div class="text-right text-sm font-semibold text-slate-700"><span id="game-progress"></span><br><span id="game-score" class="text-indigo-700"></span></div>
+                </div>
+                <div class="p-5 sm:p-8 space-y-5">
+                    <div id="game-visual" class="hidden min-h-36 flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200 p-4">
+                        <img id="game-flag" alt="Bendera negara untuk diteka" class="hidden max-h-40 max-w-full object-contain">
+                    </div>
+                    <h4 id="game-question" class="text-lg font-semibold text-slate-900 text-center"></h4>
+                    <div id="game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                    <p id="game-feedback" class="hidden text-sm font-semibold text-center" aria-live="polite"></p>
+                    <button id="game-next-button" type="button" onclick="advanceMindGame()" class="hidden w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition">Soalan Seterusnya</button>
+                </div>
+            </section>
+
+            <section id="game-result" class="hidden max-w-2xl mx-auto bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 text-center space-y-4">
+                <div class="text-4xl">🏁</div>
+                <h3 class="text-2xl font-bold text-slate-900">Pusingan Tamat!</h3>
+                <p id="game-final-score" class="text-lg font-semibold text-indigo-700"></p>
+                <p id="game-result-message" class="text-sm text-slate-600"></p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                    <button type="button" onclick="startMindGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl">Main Lagi</button>
+                    <button type="button" onclick="showGamesMenu()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-2.5 rounded-xl">Pilih Permainan</button>
+                </div>
+            </section>
+        </div>
+
     </main>
 
     <!-- Modal Notifikasi Popup -->
@@ -290,6 +393,99 @@
             "Tamat jika",
             "Tamat"
         ];
+
+        const malaysiaQuestions = {
+            low: [
+                { prompt: "Berapakah jumlah negeri di Malaysia?", answer: "13", options: ["11", "13", "14", "16"] },
+                { prompt: "Apakah bunga kebangsaan Malaysia?", answer: "Bunga raya", options: ["Bunga raya", "Orkid", "Rafflesia", "Melur"] },
+                { prompt: "Apakah mata wang Malaysia?", answer: "Ringgit Malaysia", options: ["Rupiah", "Ringgit Malaysia", "Baht", "Dolar"] },
+                { prompt: "Apakah bahasa kebangsaan Malaysia?", answer: "Bahasa Melayu", options: ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Tamil", "Bahasa Mandarin"] },
+                { prompt: "Berapakah jumlah jalur pada Jalur Gemilang?", answer: "14", options: ["10", "12", "14", "16"] },
+                { prompt: "Berapakah jumlah Wilayah Persekutuan Malaysia?", answer: "3", options: ["2", "3", "4", "5"] },
+                { prompt: "Bilakah Hari Kebangsaan disambut?", answer: "31 Ogos", options: ["31 Ogos", "16 September", "1 Mei", "30 Ogos"] },
+                { prompt: "Apakah ibu negara Malaysia?", answer: "Kuala Lumpur", options: ["Kuala Lumpur", "Putrajaya", "Shah Alam", "Johor Bahru"] },
+                { prompt: "Negeri manakah terkenal dengan sawah padi dan digelar Jelapang Padi?", answer: "Kedah", options: ["Kedah", "Pahang", "Perak", "Johor"] },
+                { prompt: "Apakah warna bulan dan bintang pada Jalur Gemilang?", answer: "Kuning", options: ["Putih", "Kuning", "Merah", "Hijau"] }
+            ],
+            medium: [
+                { prompt: "Bilakah Malaysia dibentuk?", answer: "16 September 1963", options: ["31 Ogos 1957", "16 September 1963", "16 September 1965", "31 Ogos 1963"] },
+                { prompt: "Apakah gunung tertinggi di Malaysia?", answer: "Gunung Kinabalu", options: ["Gunung Tahan", "Gunung Kinabalu", "Gunung Ledang", "Gunung Jerai"] },
+                { prompt: "Apakah sungai terpanjang di Malaysia?", answer: "Sungai Rajang", options: ["Sungai Pahang", "Sungai Rajang", "Sungai Perak", "Sungai Kinabatangan"] },
+                { prompt: "Negeri manakah yang terbesar mengikut keluasan?", answer: "Sarawak", options: ["Sabah", "Sarawak", "Pahang", "Perak"] },
+                { prompt: "Negeri manakah dikenali sebagai Negeri di Bawah Bayu?", answer: "Sabah", options: ["Sarawak", "Sabah", "Terengganu", "Kelantan"] },
+                { prompt: "Di manakah pusat pentadbiran kerajaan Persekutuan?", answer: "Putrajaya", options: ["Kuala Lumpur", "Putrajaya", "Cyberjaya", "Shah Alam"] },
+                { prompt: "Apakah ibu negeri Sarawak?", answer: "Kuching", options: ["Miri", "Sibu", "Kuching", "Bintulu"] },
+                { prompt: "Laut apakah yang memisahkan Semenanjung Malaysia dengan Sabah dan Sarawak?", answer: "Laut China Selatan", options: ["Laut Sulu", "Laut China Selatan", "Laut Andaman", "Selat Melaka"] },
+                { prompt: "Negeri manakah terletak paling selatan di Semenanjung Malaysia?", answer: "Johor", options: ["Melaka", "Johor", "Negeri Sembilan", "Pahang"] },
+                { prompt: "Apakah nama rasmi bendera Malaysia?", answer: "Jalur Gemilang", options: ["Jalur Permai", "Jalur Gemilang", "Bintang Persekutuan", "Sang Saka"] }
+            ],
+            high: [
+                { prompt: "Yang manakah satu daripada empat negeri yang diketuai Yang di-Pertua Negeri?", answer: "Pulau Pinang", options: ["Pulau Pinang", "Perak", "Pahang", "Kelantan"] },
+                { prompt: "Yang manakah BUKAN Wilayah Persekutuan?", answer: "Langkawi", options: ["Labuan", "Putrajaya", "Kuala Lumpur", "Langkawi"] },
+                { prompt: "Dewan manakah merupakan dewan rendah Parlimen Malaysia?", answer: "Dewan Rakyat", options: ["Dewan Negara", "Dewan Rakyat", "Dewan Undangan Negeri", "Majlis Raja-Raja"] },
+                { prompt: "Negeri manakah mempunyai ibu negeri bernama Kuantan?", answer: "Pahang", options: ["Pahang", "Perak", "Terengganu", "Selangor"] },
+                { prompt: "Negeri manakah mempunyai ibu negeri bernama Kota Kinabalu?", answer: "Sabah", options: ["Sarawak", "Sabah", "Johor", "Perlis"] },
+                { prompt: "Apakah nama selat yang memisahkan Johor dengan Singapura?", answer: "Selat Johor", options: ["Selat Melaka", "Selat Johor", "Selat Singapura", "Laut Sulu"] },
+                { prompt: "Negeri manakah paling kecil mengikut keluasan?", answer: "Perlis", options: ["Melaka", "Perlis", "Pulau Pinang", "Negeri Sembilan"] },
+                { prompt: "Pada tahun berapakah Singapura berpisah daripada Malaysia?", answer: "1965", options: ["1957", "1963", "1965", "1969"] },
+                { prompt: "Apakah ibu negeri Terengganu?", answer: "Kuala Terengganu", options: ["Kuala Terengganu", "Kota Bharu", "Kuantan", "Dungun"] },
+                { prompt: "Yang manakah pasangan dua negeri Malaysia di Pulau Borneo?", answer: "Sabah dan Sarawak", options: ["Sabah dan Perlis", "Sabah dan Sarawak", "Sarawak dan Johor", "Brunei dan Sabah"] }
+            ]
+        };
+
+        const logicQuestions = {
+            low: [
+                { prompt: "Apakah nombor seterusnya? 2, 4, 6, 8, __", answer: "10", options: ["9", "10", "12", "16"] },
+                { prompt: "Apakah nombor seterusnya? 5, 10, 15, 20, __", answer: "25", options: ["22", "25", "30", "35"] },
+                { prompt: "Apakah nombor seterusnya? 1, 2, 4, 8, __", answer: "16", options: ["12", "14", "16", "18"] },
+                { prompt: "Apakah nombor seterusnya? 10, 9, 8, 7, __", answer: "6", options: ["5", "6", "7", "8"] },
+                { prompt: "Apakah nombor seterusnya? 3, 6, 9, 12, __", answer: "15", options: ["14", "15", "16", "18"] },
+                { prompt: "Apakah nombor seterusnya? 1, 3, 5, 7, __", answer: "9", options: ["8", "9", "10", "11"] },
+                { prompt: "Apakah nombor seterusnya? 20, 18, 16, 14, __", answer: "12", options: ["10", "11", "12", "13"] },
+                { prompt: "Apakah nombor seterusnya? 2, 5, 8, 11, __", answer: "14", options: ["13", "14", "15", "16"] },
+                { prompt: "Apakah nombor seterusnya? 4, 8, 12, 16, __", answer: "20", options: ["18", "20", "22", "24"] },
+                { prompt: "Apakah nombor seterusnya? 30, 25, 20, 15, __", answer: "10", options: ["5", "10", "12", "15"] }
+            ],
+            medium: [
+                { prompt: "Apakah nombor seterusnya? 1, 4, 9, 16, __", answer: "25", options: ["20", "24", "25", "32"] },
+                { prompt: "Apakah nombor seterusnya? 3, 6, 12, 24, __", answer: "48", options: ["36", "42", "48", "52"] },
+                { prompt: "Apakah nombor seterusnya? 2, 5, 10, 17, 26, __", answer: "37", options: ["35", "36", "37", "39"] },
+                { prompt: "Apakah nombor seterusnya? 1, 1, 2, 3, 5, __", answer: "8", options: ["7", "8", "9", "10"] },
+                { prompt: "Apakah nombor seterusnya? 40, 35, 29, 22, __", answer: "14", options: ["13", "14", "15", "16"] },
+                { prompt: "Apakah nombor seterusnya? 2, 6, 18, 54, __", answer: "162", options: ["108", "144", "162", "216"] },
+                { prompt: "Apakah nombor seterusnya? 7, 10, 16, 25, 37, __", answer: "52", options: ["49", "50", "52", "54"] },
+                { prompt: "Apakah nombor seterusnya? 81, 27, 9, 3, __", answer: "1", options: ["0", "1", "2", "3"] },
+                { prompt: "Apakah nombor seterusnya? 4, 7, 13, 25, __", answer: "49", options: ["37", "45", "49", "51"] },
+                { prompt: "Apakah nombor seterusnya? 1, 2, 6, 24, __", answer: "120", options: ["96", "100", "120", "144"] }
+            ],
+            high: [
+                { prompt: "Apakah nombor seterusnya? 2, 3, 5, 9, 17, __", answer: "33", options: ["25", "31", "33", "35"] },
+                { prompt: "Apakah nombor seterusnya? 1, 4, 10, 22, 46, __", answer: "94", options: ["82", "90", "92", "94"] },
+                { prompt: "Apakah nombor seterusnya? 3, 8, 6, 16, 12, 32, __", answer: "24", options: ["20", "24", "36", "64"] },
+                { prompt: "Apakah nombor seterusnya? 2, 3, 5, 8, 12, 17, __", answer: "23", options: ["21", "22", "23", "24"] },
+                { prompt: "Apakah nombor seterusnya? 100, 96, 88, 76, 60, __", answer: "40", options: ["36", "40", "42", "44"] },
+                { prompt: "Apakah nombor seterusnya? 1, 2, 6, 15, 31, __", answer: "56", options: ["46", "52", "56", "62"] },
+                { prompt: "Apakah nombor seterusnya? 2, 12, 36, 80, 150, __", answer: "252", options: ["216", "240", "252", "270"] },
+                { prompt: "Apakah nombor seterusnya? 5, 11, 23, 47, __", answer: "95", options: ["89", "93", "95", "97"] },
+                { prompt: "Apakah nombor seterusnya? 1, 5, 14, 30, 55, __", answer: "91", options: ["81", "85", "91", "96"] },
+                { prompt: "Apakah nombor seterusnya? 64, 32, 16, 8, __", answer: "4", options: ["2", "4", "6", "0"] }
+            ]
+        };
+
+        const gameInfo = {
+            flags: { title: "Bendera Dunia", description: "Kenal pasti negara melalui bendera. Tahap lebih tinggi memberikan lebih banyak pilihan." },
+            malaysia: { title: "Misi Malaysia", description: "Fakta negara, sejarah, negeri dan geografi Malaysia." },
+            logic: { title: "Corak Logik", description: "Cari aturan nombor dan pola yang semakin mencabar." }
+        };
+        const levelLabels = { low: "Rendah", medium: "Sederhana", high: "Tinggi" };
+        const gameQuestionCount = 8;
+        let selectedMindGame = "";
+        let selectedGameLevel = "medium";
+        let gameQuestions = [];
+        let gameCountries = null;
+        let usedFlagCodes = new Set();
+        let currentGameQuestion = 0;
+        let currentGameScore = 0;
 
         let fasa1Unlocked = false;
         let fasa1Score = 0;
@@ -600,9 +796,203 @@
             openModule(activeModuleId);
         }
 
+        function openMindGames() {
+            document.getElementById('portal-view').classList.add('hidden');
+            document.getElementById('module-linear-search').classList.add('hidden');
+            document.getElementById('mind-games-view').classList.remove('hidden');
+            document.getElementById('nav-breadcrumb').innerText = "Permainan Minda";
+            showGamesMenu();
+        }
+
+        function showGamesMenu() {
+            selectedMindGame = "";
+            document.getElementById('games-menu').classList.remove('hidden');
+            document.getElementById('game-setup').classList.add('hidden');
+            document.getElementById('game-play').classList.add('hidden');
+            document.getElementById('game-result').classList.add('hidden');
+        }
+
+        function selectMindGame(gameId) {
+            selectedMindGame = gameId;
+            selectedGameLevel = "medium";
+            document.getElementById('game-setup-title').innerText = gameInfo[gameId].title;
+            document.getElementById('game-setup-description').innerText = gameInfo[gameId].description;
+            document.getElementById('games-menu').classList.add('hidden');
+            document.getElementById('game-play').classList.add('hidden');
+            document.getElementById('game-result').classList.add('hidden');
+            document.getElementById('game-load-error').classList.add('hidden');
+            document.getElementById('game-setup').classList.remove('hidden');
+            setGameLevel('medium');
+        }
+
+        function setGameLevel(level) {
+            selectedGameLevel = level;
+            document.querySelectorAll('.game-level-button').forEach(button => {
+                const active = button.dataset.gameLevel === level;
+                button.classList.toggle('border-indigo-500', active);
+                button.classList.toggle('bg-indigo-50', active);
+                button.classList.toggle('border-slate-200', !active);
+            });
+        }
+
+        function shuffleItems(items) {
+            const shuffled = [...items];
+            for(let index = shuffled.length - 1; index > 0; index--) {
+                const otherIndex = Math.floor(Math.random() * (index + 1));
+                [shuffled[index], shuffled[otherIndex]] = [shuffled[otherIndex], shuffled[index]];
+            }
+            return shuffled;
+        }
+
+        async function loadFlagCountries() {
+            if(gameCountries) return gameCountries;
+            const response = await fetch('https://flagcdn.com/en/codes.json');
+            if(!response.ok) throw new Error("Tak dapat memuatkan senarai bendera.");
+            const countryNames = await response.json();
+            gameCountries = Object.entries(countryNames)
+                .filter(([code]) => /^[a-z]{2}$/.test(code) && !['eu', 'un', 'aq'].includes(code))
+                .map(([code, name]) => ({
+                    code,
+                    name,
+                    flagUrl: `https://flagcdn.com/w320/${code}.png`
+                }));
+            if(gameCountries.length < 8) throw new Error("Senarai bendera tidak mencukupi.");
+            return gameCountries;
+        }
+
+        async function startMindGame() {
+            const startButton = document.getElementById('start-game-button');
+            const errorMessage = document.getElementById('game-load-error');
+            errorMessage.classList.add('hidden');
+            startButton.disabled = true;
+            startButton.innerText = "Menyediakan soalan...";
+            try {
+                usedFlagCodes = new Set();
+                currentGameQuestion = 0;
+                currentGameScore = 0;
+                if(selectedMindGame === 'flags') {
+                    await loadFlagCountries();
+                    gameQuestions = Array(gameQuestionCount).fill(null);
+                } else {
+                    const bank = selectedMindGame === 'malaysia' ? malaysiaQuestions : logicQuestions;
+                    gameQuestions = shuffleItems(bank[selectedGameLevel]).slice(0, gameQuestionCount);
+                }
+                document.getElementById('game-setup').classList.add('hidden');
+                document.getElementById('game-result').classList.add('hidden');
+                document.getElementById('game-play').classList.remove('hidden');
+                document.getElementById('game-play-title').innerText = gameInfo[selectedMindGame].title;
+                document.getElementById('game-level-label').innerText = `Tahap ${levelLabels[selectedGameLevel]}`;
+                renderMindGameQuestion();
+            } catch(error) {
+                errorMessage.innerText = `${error.message} Semak sambungan internet dan cuba lagi.`;
+                errorMessage.classList.remove('hidden');
+            } finally {
+                startButton.disabled = false;
+                startButton.innerText = "Mula Bermain";
+            }
+        }
+
+        function makeFlagQuestion() {
+            let available = gameCountries.filter(country => !usedFlagCodes.has(country.code));
+            if(available.length < 8) {
+                usedFlagCodes.clear();
+                available = gameCountries;
+            }
+            const answerCountry = available[Math.floor(Math.random() * available.length)];
+            usedFlagCodes.add(answerCountry.code);
+            const optionCount = { low: 4, medium: 6, high: 8 }[selectedGameLevel];
+            const distractors = shuffleItems(gameCountries.filter(country => country.code !== answerCountry.code))
+                .slice(0, optionCount - 1);
+            return {
+                prompt: "Bendera ini milik negara yang mana?",
+                answer: answerCountry.name,
+                options: shuffleItems([answerCountry, ...distractors]).map(country => country.name),
+                flagUrl: answerCountry.flagUrl
+            };
+        }
+
+        function renderMindGameQuestion() {
+            const question = selectedMindGame === 'flags'
+                ? makeFlagQuestion()
+                : gameQuestions[currentGameQuestion];
+            const visual = document.getElementById('game-visual');
+            const flag = document.getElementById('game-flag');
+            const answers = document.getElementById('game-answers');
+            const feedback = document.getElementById('game-feedback');
+            visual.classList.toggle('hidden', !question.flagUrl);
+            flag.classList.toggle('hidden', !question.flagUrl);
+            if(question.flagUrl) {
+                flag.src = question.flagUrl;
+                flag.alt = `Bendera ${question.answer}`;
+            } else {
+                flag.removeAttribute('src');
+            }
+            document.getElementById('game-question').innerText = question.prompt;
+            document.getElementById('game-progress').innerText = `Soalan ${currentGameQuestion + 1}/${gameQuestionCount}`;
+            document.getElementById('game-score').innerText = `Betul: ${currentGameScore}`;
+            feedback.classList.add('hidden');
+            document.getElementById('game-next-button').classList.add('hidden');
+            answers.innerHTML = '';
+            shuffleItems(question.options).forEach(option => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.answer = option;
+                button.className = "min-h-12 rounded-xl border-2 border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 transition";
+                button.textContent = option;
+                button.addEventListener('click', () => answerMindGame(option, question.answer, button));
+                answers.appendChild(button);
+            });
+        }
+
+        function answerMindGame(selectedAnswer, correctAnswer, selectedButton) {
+            const correct = selectedAnswer === correctAnswer;
+            if(correct) currentGameScore++;
+            document.querySelectorAll('#game-answers button').forEach(button => {
+                button.disabled = true;
+                button.classList.remove('hover:border-indigo-400', 'hover:bg-indigo-50');
+                if(button.dataset.answer === correctAnswer) {
+                    button.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+                }
+            });
+            if(!correct) selectedButton.classList.add('border-rose-400', 'bg-rose-50', 'text-rose-800');
+            const feedback = document.getElementById('game-feedback');
+            feedback.innerText = correct ? "Tepat!" : `Belum tepat. Jawapan: ${correctAnswer}`;
+            feedback.className = `text-sm font-semibold text-center ${correct ? 'text-emerald-700' : 'text-rose-700'}`;
+            document.getElementById('game-score').innerText = `Betul: ${currentGameScore}`;
+            document.getElementById('game-next-button').innerText = currentGameQuestion === gameQuestionCount - 1
+                ? "Lihat Keputusan"
+                : "Soalan Seterusnya";
+            document.getElementById('game-next-button').classList.remove('hidden');
+        }
+
+        function advanceMindGame() {
+            if(currentGameQuestion >= gameQuestionCount - 1) {
+                finishMindGame();
+                return;
+            }
+            currentGameQuestion++;
+            renderMindGameQuestion();
+        }
+
+        function finishMindGame() {
+            document.getElementById('game-play').classList.add('hidden');
+            document.getElementById('game-result').classList.remove('hidden');
+            document.getElementById('game-final-score').innerText = `Skor: ${currentGameScore}/${gameQuestionCount}`;
+            const percentage = currentGameScore / gameQuestionCount;
+            const message = percentage === 1
+                ? "Sempurna! Semua jawapan tepat."
+                : percentage >= 0.75
+                    ? "Hebat! Cuba lagi untuk skor penuh."
+                    : percentage >= 0.5
+                        ? "Bagus, teruskan asah minda."
+                        : "Terus mencuba, setiap pusingan bantu bina kemahiran.";
+            document.getElementById('game-result-message').innerText = message;
+        }
+
         function goToPortal() {
             document.getElementById('portal-view').classList.remove('hidden');
             document.getElementById('module-linear-search').classList.add('hidden');
+            document.getElementById('mind-games-view').classList.add('hidden');
             document.getElementById('nav-breadcrumb').innerText = "Halaman Utama";
         }
 
