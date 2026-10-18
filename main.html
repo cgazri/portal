@@ -9,10 +9,35 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; }
+        body { font-family: 'Poppins', sans-serif; transition: background-color .2s ease, color .2s ease; }
         details.category-group > summary { list-style: none; }
         details.category-group > summary::-webkit-details-marker { display: none; }
         details.category-group[open] > summary .category-chevron { transform: rotate(180deg); }
+        body:not(.theme-dark) { background-color: #edf2f7 !important; }
+        body.theme-dark { color-scheme: dark; background-color: #101827 !important; color: #e5edf7; }
+        body.theme-dark .bg-slate-50, body.theme-dark .bg-slate-50\/50 { background-color: #172335 !important; }
+        body.theme-dark .bg-white { background-color: #1d2b3d !important; }
+        body.theme-dark .bg-slate-100 { background-color: #29384b !important; }
+        body.theme-dark .bg-slate-200 { background-color: #34445a !important; }
+        body.theme-dark .text-slate-900, body.theme-dark .text-slate-800 { color: #f1f5f9 !important; }
+        body.theme-dark .text-slate-700, body.theme-dark .text-slate-600 { color: #cbd5e1 !important; }
+        body.theme-dark .text-slate-500, body.theme-dark .text-slate-400 { color: #a9b8ca !important; }
+        body.theme-dark .border-slate-100, body.theme-dark .border-slate-200, body.theme-dark .border-slate-300 { border-color: #3a4a60 !important; }
+        body.theme-dark .divide-slate-100 > :not(:last-child) { border-color: #3a4a60 !important; }
+        body.theme-dark input, body.theme-dark select { background-color: #172335; color: #f1f5f9; border-color: #52647c; }
+        body.theme-dark .bg-indigo-50 { background-color: #24324e !important; }
+        body.theme-dark .bg-emerald-50 { background-color: #173b36 !important; }
+        body.theme-dark .bg-rose-50 { background-color: #452a35 !important; }
+        body.theme-dark .home-hero { background-color: #101827; }
+        .home-hero { min-height: 22rem; }
+        .reveal { transition: opacity .5s ease, transform .5s ease; }
+        .motion-ready .reveal { opacity: 0; transform: translateY(14px); }
+        .motion-ready .reveal.is-visible { opacity: 1; transform: translateY(0); }
+        @media (hover: hover) {
+            .portal-choice { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+            .portal-choice:hover { transform: translateY(-4px); }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
@@ -27,6 +52,7 @@
                 <button onclick="openTeacherAdmin()" class="shrink-0 text-[11px] sm:text-xs bg-indigo-700 hover:bg-indigo-800 text-white px-2.5 sm:px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 whitespace-nowrap">
                     📊 Panel Guru
                 </button>
+                <button id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Tukar tema" title="Tukar tema" class="shrink-0 w-9 h-9 grid place-items-center rounded-lg border border-indigo-300/40 bg-indigo-700 hover:bg-indigo-800 transition text-lg">☾</button>
                 <div id="nav-breadcrumb" class="text-sm bg-indigo-800 px-3 py-1.5 rounded-full hidden md:block">
                     Halaman Utama
                 </div>
@@ -52,7 +78,14 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Kelas</label>
-                        <input type="text" id="input-class" placeholder="Contoh: 3 Bestari" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <select id="input-class" onchange="handleClassSelection()" onkeydown="if(event.key === 'Enter' && this.value && this.value !== '__other__') { event.preventDefault(); submitStudentInfo(); }" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                            <option value="">Pilih kelas</option>
+                            <option value="3 Alamanda">3 Alamanda</option>
+                            <option value="3 Azzahra">3 Azzahra</option>
+                            <option value="3 Begonia">3 Begonia</option>
+                            <option value="__other__">Lain-lain</option>
+                        </select>
+                        <input type="text" id="input-class-other" placeholder="Taip nama kelas" class="hidden mt-2 w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-sm text-sm">
                         Mula Masuk Modul →
@@ -114,64 +147,89 @@
             </form>
         </div>
 
-        <!-- MODAL PANEL GURU / DATA PELAJAR -->
-        <div id="admin-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4" onclick="handleModalBackdrop(event, 'admin-modal')">
-            <div class="bg-white rounded-2xl p-6 max-w-3xl w-full shadow-2xl space-y-5 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
-                <div class="flex justify-between items-center border-b pb-3">
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-900">📊 Rekod & Data Pelajar</h3>
-                        <p class="text-slate-500 text-xs">Senarai pelajar yang telah mendaftar masuk ke modul.</p>
-                    </div>
-                    <button onclick="closeTeacherAdmin()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+        <!-- DASHBOARD GURU -->
+        <div id="teacher-dashboard" class="hidden space-y-6 sm:space-y-8">
+            <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-slate-200 pb-5">
+                <div>
+                    <p class="text-xs font-semibold uppercase text-indigo-700">RUANG PENGURUSAN</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Dashboard Guru</h2>
+                    <p class="text-sm text-slate-600 mt-1">Pilih rekod atau alat pengurusan yang diperlukan.</p>
                 </div>
-                
-                <div class="flex-grow overflow-y-auto">
-                    <table class="w-full text-left border-collapse text-xs">
+                <button type="button" onclick="closeTeacherAdmin()" class="shrink-0 bg-slate-900 hover:bg-slate-700 text-white font-semibold px-4 py-2.5 rounded-xl transition">Log Keluar</button>
+            </header>
+
+            <section id="teacher-home-view" class="space-y-4">
+                <h3 class="text-lg font-bold text-slate-900">Alat Guru</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button type="button" onclick="openTeacherRecords()" class="text-left bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-2xl p-5 transition">
+                        <span class="text-2xl">📊</span>
+                        <h4 class="font-bold text-slate-900 mt-3">Rekod Pelajar · Modul 1</h4>
+                        <p class="text-sm text-slate-600 mt-1">Semak markah, kemas kini atau eksport rekod.</p>
+                        <span class="inline-block text-sm font-semibold text-indigo-700 mt-4">Buka rekod →</span>
+                    </button>
+                    <div class="bg-slate-100 border border-slate-200 rounded-2xl p-5 opacity-75">
+                        <span class="text-2xl">🗂️</span>
+                        <h4 class="font-bold text-slate-800 mt-3">Pengurusan modul</h4>
+                        <p class="text-sm text-slate-600 mt-1">Ruang untuk modul guru yang akan ditambah.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="teacher-records-view" class="hidden space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                        <button type="button" onclick="showTeacherHome()" class="text-sm text-indigo-700 font-semibold hover:underline">← Dashboard Guru</button>
+                        <h3 class="text-xl font-bold text-slate-900 mt-2">Rekod Pelajar · Modul 1</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="downloadCSV()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-lg transition">Muat Turun CSV</button>
+                        <button type="button" onclick="clearAllData()" class="bg-rose-100 hover:bg-rose-200 text-rose-800 text-sm font-semibold px-3 py-2 rounded-lg transition">Padam Semua</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                    <table class="w-full min-w-[720px] text-left border-collapse text-sm">
                         <thead>
-                            <tr class="bg-slate-100 text-slate-700 font-semibold border-b">
-                                <th class="p-2.5">#</th>
-                                <th class="p-2.5">Nama Pendek</th>
-                                <th class="p-2.5">Kelas</th>
-                                <th class="p-2.5">Modul</th>
-                                <th class="p-2.5">Markah</th>
-                                <th class="p-2.5">Masa Daftar</th>
-                                <th class="p-2.5 text-center">Tindakan</th>
+                            <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                                <th class="p-3">#</th>
+                                <th class="p-3">Nama Pendek</th>
+                                <th class="p-3">Kelas</th>
+                                <th class="p-3">Modul</th>
+                                <th class="p-3">Markah</th>
+                                <th class="p-3">Masa Daftar</th>
+                                <th class="p-3 text-center">Tindakan</th>
                             </tr>
                         </thead>
                         <tbody id="student-table-body" class="divide-y divide-slate-100">
-                            <!-- Diisi JS -->
+                            <!-- Diisi JavaScript -->
                         </tbody>
                     </table>
                 </div>
-
-                <div class="flex flex-col sm:flex-row gap-3 pt-3 border-t">
-                    <button onclick="downloadCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
-                        📥 Muat Turun Data (CSV / Excel)
-                    </button>
-                    <button onclick="clearAllData()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition">
-                        🗑️ Padam Semua Data
-                    </button>
-                    <button onclick="closeTeacherAdmin()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition sm:ml-auto">
-                        Tutup
-                    </button>
-                </div>
-            </div>
+            </section>
         </div>
 
         <div id="portal-view" class="space-y-6 sm:space-y-8">
-            <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white p-6 sm:p-8 rounded-3xl shadow-md">
-                <h2 class="text-2xl sm:text-3xl font-extrabold mb-2">Selamat Datang ke Hub Cg Azri!</h2>
-                <p class="text-indigo-100 text-sm max-w-2xl">Pilih kategori atau buka pilihan lain bila diperlukan.</p>
-            </div>
+            <section class="home-hero reveal relative isolate overflow-hidden rounded-[1.75rem] bg-slate-900 text-white flex items-end sm:items-center">
+                <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1600&q=85" alt="Buku dan bahan bacaan untuk pembelajaran" class="absolute inset-0 -z-20 w-full h-full object-cover object-center">
+                <div class="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/90 via-slate-900/70 to-slate-900/20"></div>
+                <div class="max-w-3xl p-6 sm:p-10 lg:p-12">
+                    <p class="text-xs sm:text-sm font-semibold uppercase text-emerald-300">Ruang belajar · permainan · inspirasi</p>
+                    <h2 class="text-3xl sm:text-5xl font-bold leading-tight mt-3">Selamat datang ke Hub Cg Azri</h2>
+                    <p class="text-slate-100 text-sm sm:text-base max-w-xl mt-4">Satu tempat untuk belajar, uji minda dan teroka perkara baharu.</p>
+                    <div class="flex flex-wrap gap-3 mt-6">
+                        <button type="button" onclick="document.getElementById('ask-category').scrollIntoView({behavior:'smooth'}); document.getElementById('ask-category').open = true" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-semibold px-4 py-2.5 rounded-xl transition">Teroka pembelajaran</button>
+                        <button type="button" onclick="openMindGames()" class="border border-white/70 hover:bg-white/10 text-white font-semibold px-4 py-2.5 rounded-xl transition">Main permainan minda</button>
+                    </div>
+                </div>
+            </section>
 
-            <details id="ask-category" class="category-group space-y-4" open>
+            <details id="ask-category" class="category-group space-y-4 reveal" open>
                 <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
                     <span class="flex items-center gap-2 min-w-0"><span class="text-xl">💻</span><span class="text-lg sm:text-xl font-bold text-slate-900">Asas Sains Komputer (ASK) Tingkatan 3</span></span>
                     <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
                 </summary>
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <button type="button" onclick="promptStudentInfo('linear-search')" class="w-full text-left bg-white p-5 sm:p-6 rounded-2xl shadow-sm border-2 border-indigo-500 hover:shadow-md transition flex flex-col justify-between group">
+                        <button type="button" onclick="promptStudentInfo('linear-search')" class="portal-choice w-full text-left bg-white p-5 sm:p-6 rounded-2xl shadow-sm border-2 border-indigo-500 hover:shadow-md transition flex flex-col justify-between group">
                             <span class="bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full self-start">Bab 3: Algoritma</span>
                             <h3 class="text-lg font-bold text-slate-900 mt-3 group-hover:text-indigo-600 transition">Modul 1: Algoritma Carian Linear</h3>
                             <p class="text-slate-600 text-sm mt-2">Susun langkah pseudokod dan bina carta alir carian linear.</p>
@@ -192,14 +250,14 @@
                 </div>
             </details>
 
-            <details id="games-category" class="category-group space-y-4" open>
+            <details id="games-category" class="category-group space-y-4 reveal" open>
                 <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
                     <span class="flex items-center gap-2 min-w-0"><span class="text-xl">🧠</span><span class="text-lg sm:text-xl font-bold text-slate-900">Permainan Minda</span></span>
                     <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
                 </summary>
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button type="button" onclick="openMindGames('flags')" class="w-full text-left bg-white p-5 rounded-2xl border border-indigo-300 hover:border-indigo-500 hover:shadow-md transition">
+                        <button type="button" onclick="openMindGames('flags')" class="portal-choice w-full text-left bg-white p-5 rounded-2xl border border-indigo-300 hover:border-indigo-500 hover:shadow-md transition">
                             <span class="text-2xl">🌍</span>
                             <h3 class="font-bold text-slate-900 mt-3">Bendera Dunia</h3>
                             <p class="text-slate-600 text-sm mt-1">Kenal pasti bendera negara secara rawak.</p>
@@ -222,7 +280,7 @@
                 </div>
             </details>
 
-            <details id="other-category" class="category-group space-y-4 opacity-80">
+            <details id="other-category" class="category-group space-y-4 opacity-80 reveal">
                 <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
                     <span class="flex items-center gap-2"><span class="text-xl">📚</span><span class="text-lg sm:text-xl font-bold text-slate-900">Kategori Utama Lain</span></span>
                     <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
@@ -353,6 +411,7 @@
                     <h4 id="game-question" class="text-lg font-semibold text-slate-900 text-center"></h4>
                     <div id="game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
                     <p id="game-feedback" class="hidden text-sm font-semibold text-center" aria-live="polite"></p>
+                    <a id="game-source" href="#" target="_blank" rel="noopener noreferrer" class="hidden text-xs text-indigo-700 underline text-center">Rujukan rasmi</a>
                     <button id="game-next-button" type="button" onclick="advanceMindGame()" class="hidden w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition">Soalan Seterusnya</button>
                 </div>
             </section>
@@ -408,40 +467,36 @@
 
         const malaysiaQuestions = {
             low: [
-                { prompt: "Berapakah jumlah negeri di Malaysia?", answer: "13", options: ["11", "13", "14", "16"] },
-                { prompt: "Apakah bunga kebangsaan Malaysia?", answer: "Bunga raya", options: ["Bunga raya", "Orkid", "Rafflesia", "Melur"] },
-                { prompt: "Apakah mata wang Malaysia?", answer: "Ringgit Malaysia", options: ["Rupiah", "Ringgit Malaysia", "Baht", "Dolar"] },
-                { prompt: "Apakah bahasa kebangsaan Malaysia?", answer: "Bahasa Melayu", options: ["Bahasa Melayu", "Bahasa Inggeris", "Bahasa Tamil", "Bahasa Mandarin"] },
-                { prompt: "Berapakah jumlah jalur pada Jalur Gemilang?", answer: "14", options: ["10", "12", "14", "16"] },
-                { prompt: "Berapakah jumlah Wilayah Persekutuan Malaysia?", answer: "3", options: ["2", "3", "4", "5"] },
-                { prompt: "Bilakah Hari Kebangsaan disambut?", answer: "31 Ogos", options: ["31 Ogos", "16 September", "1 Mei", "30 Ogos"] },
-                { prompt: "Apakah ibu negara Malaysia?", answer: "Kuala Lumpur", options: ["Kuala Lumpur", "Putrajaya", "Shah Alam", "Johor Bahru"] },
-                { prompt: "Negeri manakah terkenal dengan sawah padi dan digelar Jelapang Padi?", answer: "Kedah", options: ["Kedah", "Pahang", "Perak", "Johor"] },
-                { prompt: "Apakah warna bulan dan bintang pada Jalur Gemilang?", answer: "Kuning", options: ["Putih", "Kuning", "Merah", "Hijau"] }
+                { prompt: "Setakat 2026, siapakah Perdana Menteri Malaysia?", answer: "Anwar Ibrahim", options: ["Anwar Ibrahim", "Ismail Sabri Yaakob", "Muhyiddin Yassin", "Mahathir Mohamad"], source: "https://www.pmo.gov.my/ms/", current: true },
+                { prompt: "Berapakah jumlah jalur pada Jalur Gemilang?", answer: "14", options: ["10", "12", "14", "16"], source: "https://www.merdeka360.my/web/jalur-gemilang-4/" },
+                { prompt: "Malaysia diisytiharkan pada tarikh yang mana?", answer: "16 September 1963", options: ["31 Ogos 1957", "16 September 1963", "16 September 1965", "1 Januari 1963"], source: "https://www.merdeka360.my/web/pengisytiharan-penubuhan-malaysia/" },
+                { prompt: "Apakah nama bendera kebangsaan Malaysia?", answer: "Jalur Gemilang", options: ["Jalur Gemilang", "Bintang Persekutuan", "Harimau Malaya", "Bendera Merdeka"], source: "https://www.merdeka360.my/web/jalur-gemilang-4/" },
+                { prompt: "Siapakah pendaki Everest pertama dari Malaysia menurut Merdeka360?", answer: "Dato' M. Magendran", options: ["Dato' M. Magendran", "M. Moorthy", "Azim Afif Ishak", "Ravichandran Tharumalingam"], source: "https://www.merdeka360.my/web/dato-m-magendran-pendaki-gunung-everest-pertama-malaysia/" },
+                { prompt: "Tokoh manakah diprofilkan oleh Merdeka360 sebagai pejuang kemerdekaan Sabah?", answer: "Mat Salleh", options: ["Mat Salleh", "Rentap", "Mat Kilau", "Tok Janggut"], source: "https://www.merdeka360.my/web/mat-salleh-tokoh-pejuang-kemerdekaan-sabah/" },
+                { prompt: "Siapakah Sultan Kedah yang disebut dalam portal rasmi negeri pada 2026?", answer: "Sultan Sallehuddin", options: ["Sultan Sallehuddin", "Sultan Abdul Halim", "Sultan Badlishah", "Sultan Ahmad Tajuddin"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/", current: true },
+                { prompt: "Apakah jawapan kepada soalan: bendera negara manakah dikenali sebagai Jalur Gemilang?", answer: "Malaysia", options: ["Malaysia", "Indonesia", "Brunei", "Singapura"], source: "https://www.merdeka360.my/web/jalur-gemilang-4/" }
             ],
             medium: [
-                { prompt: "Bilakah Malaysia dibentuk?", answer: "16 September 1963", options: ["31 Ogos 1957", "16 September 1963", "16 September 1965", "31 Ogos 1963"] },
-                { prompt: "Apakah gunung tertinggi di Malaysia?", answer: "Gunung Kinabalu", options: ["Gunung Tahan", "Gunung Kinabalu", "Gunung Ledang", "Gunung Jerai"] },
-                { prompt: "Apakah sungai terpanjang di Malaysia?", answer: "Sungai Rajang", options: ["Sungai Pahang", "Sungai Rajang", "Sungai Perak", "Sungai Kinabatangan"] },
-                { prompt: "Negeri manakah yang terbesar mengikut keluasan?", answer: "Sarawak", options: ["Sabah", "Sarawak", "Pahang", "Perak"] },
-                { prompt: "Negeri manakah dikenali sebagai Negeri di Bawah Bayu?", answer: "Sabah", options: ["Sarawak", "Sabah", "Terengganu", "Kelantan"] },
-                { prompt: "Di manakah pusat pentadbiran kerajaan Persekutuan?", answer: "Putrajaya", options: ["Kuala Lumpur", "Putrajaya", "Cyberjaya", "Shah Alam"] },
-                { prompt: "Apakah ibu negeri Sarawak?", answer: "Kuching", options: ["Miri", "Sibu", "Kuching", "Bintulu"] },
-                { prompt: "Laut apakah yang memisahkan Semenanjung Malaysia dengan Sabah dan Sarawak?", answer: "Laut China Selatan", options: ["Laut Sulu", "Laut China Selatan", "Laut Andaman", "Selat Melaka"] },
-                { prompt: "Negeri manakah terletak paling selatan di Semenanjung Malaysia?", answer: "Johor", options: ["Melaka", "Johor", "Negeri Sembilan", "Pahang"] },
-                { prompt: "Apakah nama rasmi bendera Malaysia?", answer: "Jalur Gemilang", options: ["Jalur Permai", "Jalur Gemilang", "Bintang Persekutuan", "Sang Saka"] }
+                { prompt: "Pada tarikh apakah Persekutuan Malaysia diisytiharkan?", answer: "16 September 1963", options: ["31 Ogos 1957", "16 September 1963", "9 Julai 1963", "16 September 1965"], source: "https://www.merdeka360.my/web/pengisytiharan-penubuhan-malaysia/" },
+                { prompt: "Apakah gelaran Sultan Kedah, Sultan Sallehuddin?", answer: "Al Aminul Karim", options: ["Al Aminul Karim", "Seri Paduka", "Yang di-Pertuan Besar", "Raja Muda"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/" },
+                { prompt: "Siapakah Raja Muda Kedah yang disebut dalam laporan negeri pada 2026?", answer: "Tengku Sarafudin Badlishah", options: ["Tengku Sarafudin Badlishah", "Tunku Shazuddin Ariff", "Sultan Sallehuddin", "Muhammad Sanusi Md. Nor"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/", current: true },
+                { prompt: "Siapakah tokoh yang menjadi tajuk artikel pejuang kemerdekaan Sabah Merdeka360?", answer: "Mat Salleh", options: ["Mat Salleh", "Rentap", "Mat Kilau", "Tok Janggut"], source: "https://www.merdeka360.my/web/mat-salleh-tokoh-pejuang-kemerdekaan-sabah/" },
+                { prompt: "Siapakah pendaki Everest pertama dari Malaysia menurut Merdeka360?", answer: "Dato' M. Magendran", options: ["Dato' M. Magendran", "M. Moorthy", "Azim Afif Ishak", "Ravichandran Tharumalingam"], source: "https://www.merdeka360.my/web/dato-m-magendran-pendaki-gunung-everest-pertama-malaysia/" },
+                { prompt: "Apakah nama penuh Sultanah Kedah yang disebut dalam laporan negeri?", answer: "Sultanah Maliha Almarhum Tengku Ariff", options: ["Sultanah Maliha Almarhum Tengku Ariff", "Che Puan Muda Zaheeda Mohamed Ariff", "Tunku Che Puan Nur Julie Ariff", "Tok Puan Jusmalailani Jusoh"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/" },
+                { prompt: "Siapakah Tunku Mahkota Kedah yang dinamakan dalam laporan rasmi negeri?", answer: "Tunku Shazuddin Ariff Ibni Sultan Sallehuddin", options: ["Tunku Shazuddin Ariff Ibni Sultan Sallehuddin", "Tengku Sarafudin Badlishah", "Tunku Abdul Hamid Thani Ibni Almarhum Sultan Badlishah", "Dato' Seri Muhammad Sanusi Md. Nor"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/" },
+                { prompt: "Berapakah jumlah jalur pada Jalur Gemilang?", answer: "14", options: ["12", "13", "14", "15"], source: "https://www.merdeka360.my/web/jalur-gemilang-4/" },
+                { prompt: "Menurut PMO, siapakah Perdana Menteri Malaysia setakat Oktober 2026?", answer: "Dato' Seri Anwar Ibrahim", options: ["Dato' Seri Anwar Ibrahim", "Dato' Seri Ismail Sabri Yaakob", "Tan Sri Muhyiddin Yassin", "Tun Dr. Mahathir Mohamad"], source: "https://www.pmo.gov.my/ms/", current: true }
             ],
             high: [
-                { prompt: "Yang manakah satu daripada empat negeri yang diketuai Yang di-Pertua Negeri?", answer: "Pulau Pinang", options: ["Pulau Pinang", "Perak", "Pahang", "Kelantan"] },
-                { prompt: "Yang manakah BUKAN Wilayah Persekutuan?", answer: "Langkawi", options: ["Labuan", "Putrajaya", "Kuala Lumpur", "Langkawi"] },
-                { prompt: "Dewan manakah merupakan dewan rendah Parlimen Malaysia?", answer: "Dewan Rakyat", options: ["Dewan Negara", "Dewan Rakyat", "Dewan Undangan Negeri", "Majlis Raja-Raja"] },
-                { prompt: "Negeri manakah mempunyai ibu negeri bernama Kuantan?", answer: "Pahang", options: ["Pahang", "Perak", "Terengganu", "Selangor"] },
-                { prompt: "Negeri manakah mempunyai ibu negeri bernama Kota Kinabalu?", answer: "Sabah", options: ["Sarawak", "Sabah", "Johor", "Perlis"] },
-                { prompt: "Apakah nama selat yang memisahkan Johor dengan Singapura?", answer: "Selat Johor", options: ["Selat Melaka", "Selat Johor", "Selat Singapura", "Laut Sulu"] },
-                { prompt: "Negeri manakah paling kecil mengikut keluasan?", answer: "Perlis", options: ["Melaka", "Perlis", "Pulau Pinang", "Negeri Sembilan"] },
-                { prompt: "Pada tahun berapakah Singapura berpisah daripada Malaysia?", answer: "1965", options: ["1957", "1963", "1965", "1969"] },
-                { prompt: "Apakah ibu negeri Terengganu?", answer: "Kuala Terengganu", options: ["Kuala Terengganu", "Kota Bharu", "Kuantan", "Dungun"] },
-                { prompt: "Yang manakah pasangan dua negeri Malaysia di Pulau Borneo?", answer: "Sabah dan Sarawak", options: ["Sabah dan Perlis", "Sabah dan Sarawak", "Sarawak dan Johor", "Brunei dan Sabah"] }
+                { prompt: "Siapakah Sultan Kedah yang disebut dalam laporan rasmi negeri pada 2026?", answer: "Sultan Sallehuddin Ibni Almarhum Sultan Badlishah", options: ["Sultan Sallehuddin Ibni Almarhum Sultan Badlishah", "Sultan Abdul Halim Mu'adzam Shah", "Sultan Badlishah Ibni Almarhum Sultan Abdul Hamid Halim Shah", "Sultan Ahmad Tajuddin Mukarram Shah"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/", current: true },
+                { prompt: "Apakah gelaran rasmi Sultan Kedah dalam laporan negeri 2026?", answer: "Al Aminul Karim", options: ["Al Aminul Karim", "Seri Paduka", "Yang di-Pertuan Besar", "Raja Muda"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/" },
+                { prompt: "Siapakah Raja Muda Kedah yang dinamakan dalam laporan rasmi negeri?", answer: "Tengku Sarafudin Badlishah Ibni Sultan Sallehuddin", options: ["Tengku Sarafudin Badlishah Ibni Sultan Sallehuddin", "Tunku Shazuddin Ariff Ibni Sultan Sallehuddin", "Sultan Sallehuddin Ibni Almarhum Sultan Badlishah", "Dato' Seri Muhammad Sanusi Md. Nor"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/" },
+                { prompt: "Siapakah Sultanah Kedah yang disebut bersama Sultan dalam laporan negeri?", answer: "Sultanah Maliha Almarhum Tengku Ariff", options: ["Sultanah Maliha Almarhum Tengku Ariff", "Che Puan Muda Zaheeda Mohamed Ariff", "Tunku Che Puan Nur Julie Ariff", "Tok Puan Jusmalailani Jusoh"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/" },
+                { prompt: "Siapakah Tunku Mahkota Kedah yang dinyatakan dalam laporan negeri 2026?", answer: "Tunku Shazuddin Ariff Ibni Sultan Sallehuddin", options: ["Tunku Shazuddin Ariff Ibni Sultan Sallehuddin", "Tengku Sarafudin Badlishah", "Tunku Abdul Hamid Thani Ibni Almarhum Sultan Badlishah", "Muhammad Sanusi Md. Nor"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/" },
+                { prompt: "Apakah tajuk tokoh Sabah yang dipaparkan oleh Merdeka360?", answer: "Mat Salleh – Tokoh Pejuang Kemerdekaan Sabah", options: ["Mat Salleh – Tokoh Pejuang Kemerdekaan Sabah", "Rentap – Pahlawan Sarawak", "Mat Kilau – Pahlawan Pahang", "Tok Janggut – Ulama Kelantan"], source: "https://www.merdeka360.my/web/mat-salleh-tokoh-pejuang-kemerdekaan-sabah/" },
+                { prompt: "Siapakah yang Merdeka360 nyatakan sebagai pendaki Everest pertama Malaysia?", answer: "Dato' M. Magendran", options: ["Dato' M. Magendran", "M. Moorthy", "Azim Afif Ishak", "Ravichandran Tharumalingam"], source: "https://www.merdeka360.my/web/dato-m-magendran-pendaki-gunung-everest-pertama-malaysia/" },
+                { prompt: "Sultan Sallehuddin ialah Sultan negeri mana menurut portal negeri?", answer: "Kedah Darul Aman", options: ["Kedah Darul Aman", "Perlis Indera Kayangan", "Perak Darul Ridzuan", "Kelantan Darul Naim"], source: "https://www.kedah.gov.my/index.php/2026/07/07/majlis-jamuan-negeri-sempena-keputeraan-ke-84-tuanku-sultan-kedah/" },
+                { prompt: "Menurut PMO, siapakah Perdana Menteri Malaysia setakat Oktober 2026?", answer: "Dato' Seri Anwar Ibrahim", options: ["Dato' Seri Anwar Ibrahim", "Dato' Seri Ismail Sabri Yaakob", "Tan Sri Muhyiddin Yassin", "Tun Dr. Mahathir Mohamad"], source: "https://www.pmo.gov.my/ms/", current: true }
             ]
         };
 
@@ -485,16 +540,23 @@
         };
 
         const gameInfo = {
-            flags: { title: "Bendera Dunia", description: "Kenal pasti negara melalui bendera. Tahap lebih tinggi memberikan lebih banyak pilihan." },
+            flags: { title: "Bendera Dunia", description: "Rendah: ASEAN dan jiran Asia. Sederhana: negara global yang dikenali. Tinggi: negara yang kurang biasa." },
             malaysia: { title: "Misi Malaysia", description: "Fakta negara, sejarah, negeri dan geografi Malaysia." },
             logic: { title: "Corak Logik", description: "Cari aturan nombor dan pola yang semakin mencabar." }
         };
+        const flagCountryTiers = {
+            low: new Set(['bn', 'kh', 'id', 'la', 'my', 'mm', 'ph', 'sg', 'th', 'tl', 'vn', 'cn', 'in', 'jp', 'kr', 'np', 'bd', 'lk']),
+            medium: new Set(['af', 'mv', 'pk', 'ir', 'iq', 'sa', 'ae', 'qa', 'om', 'kz', 'uz', 'mn', 'tr', 'eg', 'ma', 'za', 'ng', 'ke', 'tz', 'gh', 'et', 'ar', 'cl', 'pe', 'co', 've', 'mx', 'cu', 'jm', 'gb', 'fr', 'de', 'it', 'es', 'au', 'nz', 'ca', 'us', 'ru', 'br', 'gr', 'pl', 'ua', 'nl', 'be', 'ch', 'se', 'no', 'fi', 'dk', 'ie'])
+        };
+        const dependentFlagCodes = new Set(['ai', 'aq', 'as', 'aw', 'ax', 'bl', 'bm', 'bq', 'bv', 'cc', 'ck', 'cw', 'cx', 'eh', 'fk', 'fo', 'gf', 'gg', 'gi', 'gl', 'gp', 'gs', 'gu', 'hk', 'hm', 'im', 'io', 'je', 'ky', 'mf', 'mo', 'mp', 'mq', 'ms', 'nc', 'nf', 'nu', 'pf', 'pm', 'pn', 'pr', 're', 'sh', 'sj', 'sx', 'tc', 'tf', 'tk', 'um', 'vg', 'vi', 'wf', 'yt']);
         const levelLabels = { low: "Rendah", medium: "Sederhana", high: "Tinggi" };
         const gameQuestionCount = 8;
         let selectedMindGame = "";
         let selectedGameLevel = "medium";
         let gameQuestions = [];
         let gameCountries = null;
+        let gameFlagPool = [];
+        let activeGameQuestion = null;
         let usedFlagCodes = new Set();
         let currentGameQuestion = 0;
         let currentGameScore = 0;
@@ -533,6 +595,10 @@
         }
 
         function openTeacherAdmin() {
+            if(teacherAuthenticated) {
+                showTeacherHome();
+                return;
+            }
             document.getElementById('teacher-email').value = "";
             document.getElementById('teacher-password').value = "";
             document.getElementById('teacher-login-error').classList.add('hidden');
@@ -617,8 +683,12 @@
 
             teacherAuthenticated = true;
             closeTeacherLogin();
-            document.getElementById('admin-modal').classList.remove('hidden');
-            await renderStudentTable();
+            document.getElementById('portal-view').classList.add('hidden');
+            document.getElementById('module-linear-search').classList.add('hidden');
+            document.getElementById('mind-games-view').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.remove('hidden');
+            document.getElementById('nav-breadcrumb').innerText = "Dashboard Guru";
+            showTeacherHome();
         }
 
         function closeTeacherLogin() {
@@ -626,16 +696,29 @@
         }
 
         function closeTeacherAdmin() {
-            document.getElementById('admin-modal').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.add('hidden');
             teacherAuthenticated = false;
             supabaseClient.auth.signOut();
+            goToPortal();
+        }
+
+        function showTeacherHome() {
+            document.getElementById('teacher-home-view').classList.remove('hidden');
+            document.getElementById('teacher-records-view').classList.add('hidden');
+            document.getElementById('nav-breadcrumb').innerText = "Dashboard Guru";
+        }
+
+        async function openTeacherRecords() {
+            document.getElementById('teacher-home-view').classList.add('hidden');
+            document.getElementById('teacher-records-view').classList.remove('hidden');
+            document.getElementById('nav-breadcrumb').innerText = "Rekod Pelajar · Modul 1";
+            await renderStudentTable();
         }
 
         function handleModalBackdrop(event, modalId) {
             if(event.target.id !== modalId) return;
             if(modalId === 'teacher-login-modal') closeTeacherLogin();
             if(modalId === 'teacher-password-reset-modal') closeTeacherPasswordReset();
-            if(modalId === 'admin-modal') closeTeacherAdmin();
             if(modalId === 'popup-modal') closePopup();
         }
 
@@ -772,7 +855,17 @@
             activeModuleId = modId;
             document.getElementById('input-name').value = "";
             document.getElementById('input-class').value = "";
+            document.getElementById('input-class-other').value = "";
+            document.getElementById('input-class-other').classList.add('hidden');
             document.getElementById('student-modal').classList.remove('hidden');
+        }
+
+        function handleClassSelection() {
+            const otherClass = document.getElementById('input-class-other');
+            const isOther = document.getElementById('input-class').value === '__other__';
+            otherClass.classList.toggle('hidden', !isOther);
+            otherClass.required = isOther;
+            if(isOther) otherClass.focus();
         }
 
         function closeStudentModal() {
@@ -787,7 +880,10 @@
 
         function submitStudentInfo() {
             const name = document.getElementById('input-name').value.trim();
-            const cls = document.getElementById('input-class').value.trim();
+            const selectedClass = document.getElementById('input-class').value;
+            const cls = selectedClass === '__other__'
+                ? document.getElementById('input-class-other').value.trim()
+                : selectedClass;
             if(!name || !cls) {
                 alert("Sila masukkan Nama Pendek dan Kelas anda.");
                 return;
@@ -863,7 +959,7 @@
             if(!response.ok) throw new Error("Tak dapat memuatkan senarai bendera.");
             const countryNames = await response.json();
             gameCountries = Object.entries(countryNames)
-                .filter(([code]) => /^[a-z]{2}$/.test(code) && !['eu', 'un', 'aq'].includes(code))
+                .filter(([code]) => /^[a-z]{2}$/.test(code) && !['eu', 'un'].includes(code) && !dependentFlagCodes.has(code))
                 .map(([code, name]) => ({
                     code,
                     name,
@@ -885,6 +981,14 @@
                 currentGameScore = 0;
                 if(selectedMindGame === 'flags') {
                     await loadFlagCountries();
+                    if(selectedGameLevel === 'low') {
+                        gameFlagPool = gameCountries.filter(country => flagCountryTiers.low.has(country.code));
+                    } else if(selectedGameLevel === 'medium') {
+                        gameFlagPool = gameCountries.filter(country => flagCountryTiers.medium.has(country.code));
+                    } else {
+                        gameFlagPool = gameCountries.filter(country => !flagCountryTiers.low.has(country.code) && !flagCountryTiers.medium.has(country.code));
+                    }
+                    if(gameFlagPool.length < 8) throw new Error("Negara tidak mencukupi untuk tahap ini.");
                     gameQuestions = Array(gameQuestionCount).fill(null);
                 } else {
                     const bank = selectedMindGame === 'malaysia' ? malaysiaQuestions : logicQuestions;
@@ -906,15 +1010,15 @@
         }
 
         function makeFlagQuestion() {
-            let available = gameCountries.filter(country => !usedFlagCodes.has(country.code));
+            let available = gameFlagPool.filter(country => !usedFlagCodes.has(country.code));
             if(available.length < 8) {
                 usedFlagCodes.clear();
-                available = gameCountries;
+                available = gameFlagPool;
             }
             const answerCountry = available[Math.floor(Math.random() * available.length)];
             usedFlagCodes.add(answerCountry.code);
             const optionCount = { low: 4, medium: 6, high: 8 }[selectedGameLevel];
-            const distractors = shuffleItems(gameCountries.filter(country => country.code !== answerCountry.code))
+            const distractors = shuffleItems(gameFlagPool.filter(country => country.code !== answerCountry.code))
                 .slice(0, optionCount - 1);
             return {
                 prompt: "Bendera ini milik negara yang mana?",
@@ -928,6 +1032,7 @@
             const question = selectedMindGame === 'flags'
                 ? makeFlagQuestion()
                 : gameQuestions[currentGameQuestion];
+            activeGameQuestion = question;
             const visual = document.getElementById('game-visual');
             const flag = document.getElementById('game-flag');
             const answers = document.getElementById('game-answers');
@@ -944,6 +1049,7 @@
             document.getElementById('game-progress').innerText = `Soalan ${currentGameQuestion + 1}/${gameQuestionCount}`;
             document.getElementById('game-score').innerText = `Betul: ${currentGameScore}`;
             feedback.classList.add('hidden');
+            document.getElementById('game-source').classList.add('hidden');
             document.getElementById('game-next-button').classList.add('hidden');
             answers.innerHTML = '';
             shuffleItems(question.options).forEach(option => {
@@ -971,6 +1077,13 @@
             const feedback = document.getElementById('game-feedback');
             feedback.innerText = correct ? "Tepat!" : `Belum tepat. Jawapan: ${correctAnswer}`;
             feedback.className = `text-sm font-semibold text-center ${correct ? 'text-emerald-700' : 'text-rose-700'}`;
+            const sourceLink = document.getElementById('game-source');
+            if(activeGameQuestion.source) {
+                sourceLink.href = activeGameQuestion.source;
+                sourceLink.classList.remove('hidden');
+            } else {
+                sourceLink.classList.add('hidden');
+            }
             document.getElementById('game-score').innerText = `Betul: ${currentGameScore}`;
             document.getElementById('game-next-button').innerText = currentGameQuestion === gameQuestionCount - 1
                 ? "Lihat Keputusan"
@@ -1003,9 +1116,14 @@
         }
 
         function goToPortal() {
+            if(teacherAuthenticated) {
+                showTeacherHome();
+                return;
+            }
             document.getElementById('portal-view').classList.remove('hidden');
             document.getElementById('module-linear-search').classList.add('hidden');
             document.getElementById('mind-games-view').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.add('hidden');
             document.getElementById('nav-breadcrumb').innerText = "Halaman Utama";
         }
 
@@ -1279,7 +1397,6 @@
             if(!document.getElementById('popup-modal').classList.contains('hidden')) closePopup();
             else if(!document.getElementById('teacher-password-reset-modal').classList.contains('hidden')) closeTeacherPasswordReset();
             else if(!document.getElementById('teacher-login-modal').classList.contains('hidden')) closeTeacherLogin();
-            else if(!document.getElementById('admin-modal').classList.contains('hidden')) closeTeacherAdmin();
             else if(!document.getElementById('student-modal').classList.contains('hidden')) closeStudentModal();
         });
 
@@ -1290,6 +1407,43 @@
                 document.getElementById('teacher-password-reset-modal').classList.remove('hidden');
             }
         });
+
+        const colorSchemePreference = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function applyTheme(theme, saveChoice = false) {
+            const isDark = theme === 'dark';
+            document.body.classList.toggle('theme-dark', isDark);
+            const button = document.getElementById('theme-toggle');
+            button.textContent = isDark ? '☀' : '☾';
+            button.setAttribute('aria-label', isDark ? 'Tukar ke tema cerah' : 'Tukar ke tema gelap');
+            button.title = isDark ? 'Tukar ke tema cerah' : 'Tukar ke tema gelap';
+            if(saveChoice) localStorage.setItem('portal-theme', theme);
+        }
+
+        function toggleTheme() {
+            applyTheme(document.body.classList.contains('theme-dark') ? 'light' : 'dark', true);
+        }
+
+        const savedTheme = localStorage.getItem('portal-theme');
+        applyTheme(savedTheme || (colorSchemePreference.matches ? 'dark' : 'light'));
+        colorSchemePreference.addEventListener('change', event => {
+            if(!localStorage.getItem('portal-theme')) applyTheme(event.matches ? 'dark' : 'light');
+        });
+
+        if('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.body.classList.add('motion-ready');
+            const revealObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12 });
+            document.querySelectorAll('.reveal').forEach(element => revealObserver.observe(element));
+        } else {
+            document.querySelectorAll('.reveal').forEach(element => element.classList.add('is-visible'));
+        }
     </script>
 </body>
 </html>
