@@ -35,20 +35,17 @@
             margin-right: .4rem;
             color: #fde68a;
         }
-        .airline-mark {
-            display: inline-grid;
+        .airline-logo {
+            display: inline-block;
             flex: 0 0 auto;
-            place-items: center;
-            min-width: 2.25rem;
-            height: 1.75rem;
-            padding: 0 .4rem;
-            border: 1px solid currentColor;
-            border-radius: .55rem;
-            font-size: .65rem;
-            font-weight: 800;
-            letter-spacing: .04em;
-            line-height: 1;
-            white-space: nowrap;
+            width: 7rem;
+            height: 2rem;
+            padding: .2rem .4rem;
+            border: 1px solid #e2e8f0;
+            border-radius: .5rem;
+            background: #fff;
+            object-fit: contain;
+            vertical-align: middle;
         }
         .airline-legend-item { display: inline-flex; align-items: center; gap: .45rem; }
         #toast-box { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: .5rem; width: min(92vw, 26rem); pointer-events: none; }
@@ -264,11 +261,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <label class="block text-sm font-medium text-slate-700">Syarikat penerbangan
                             <select id="fl-airline" required onchange="updateFlightChoice('airline')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                                <option value="SIA (Singapore Airlines)">SIA — Singapore Airlines</option>
-                                <option value="Qantas">Qantas</option>
+                                <option value="Singapore Airlines (SQ)">Singapore Airlines (SQ)</option>
+                                <option value="Qantas (QF)">Qantas (QF)</option>
                                 <option value="Malaysia Airlines (MH)">Malaysia Airlines (MH)</option>
                                 <option value="Air New Zealand (NZ)">Air New Zealand (NZ)</option>
-                                <option value="Virgin Australia">Virgin Australia</option>
+                                <option value="Virgin Australia (VA)">Virgin Australia (VA)</option>
                                 <option value="__other__">Lain-lain (isi sendiri)</option>
                             </select>
                             <input id="fl-airline-other" maxlength="60" oninput="updateAirlinePreview()" placeholder="Nama syarikat penerbangan" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
@@ -417,7 +414,7 @@
                 <div class="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/90 via-slate-900/70 to-slate-900/20"></div>
                 <div class="max-w-3xl p-6 sm:p-10 lg:p-12">
                     <p class="text-xs sm:text-sm font-semibold uppercase text-emerald-300">Ruang belajar · permainan · inspirasi</p>
-                    <h2 class="text-3xl sm:text-5xl font-bold leading-tight mt-3">Selamat datang ke Hub Cg Azri A</h2>
+                    <h2 class="text-3xl sm:text-5xl font-bold leading-tight mt-3">Selamat datang ke Hub Cg Azri</h2>
                     <p class="text-slate-100 text-sm sm:text-base max-w-xl mt-4">Satu tempat untuk belajar, uji minda dan teroka perkara baharu.</p>
                     <div class="flex flex-wrap gap-3 mt-6">
                         <button type="button" onclick="document.getElementById('ask-category').scrollIntoView({behavior:'smooth'}); document.getElementById('ask-category').open = true" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-semibold px-4 py-2.5 rounded-xl transition">Teroka pembelajaran</button>
@@ -1091,11 +1088,11 @@
             SYD: 'Sydney Airport'
         };
         const airlineBrands = [
-            { match: /singapore airlines|(^|\W)sia(\W|$)/i, mark: 'SIA', background: '#0b1f49', color: '#f7c75a' },
-            { match: /qantas/i, mark: 'Q', background: '#c8102e', color: '#ffffff' },
-            { match: /malaysia|(^|\W)mh(\W|$)/i, mark: 'MH', background: '#1d4ed8', color: '#ffd54f' },
-            { match: /air new zealand|(^|\W)nz(\W|$)/i, mark: 'NZ', background: '#111827', color: '#ffffff' },
-            { match: /virgin australia/i, mark: 'VA', background: '#7e225b', color: '#ffffff' }
+            { name: 'Singapore Airlines', code: 'SQ', match: /singapore airlines|(^|\W)(sia|sq)(\W|$)/i, logo: './assets/airlines/singapore-airlines.svg', color: '#0b1f49' },
+            { name: 'Qantas', code: 'QF', match: /qantas|(^|\W)qf(\W|$)/i, logo: './assets/airlines/qantas.svg', color: '#c8102e' },
+            { name: 'Malaysia Airlines', code: 'MH', match: /malaysia airlines?|(^|\W)mh(\W|$)/i, logo: './assets/airlines/malaysia-airlines.svg', color: '#003478' },
+            { name: 'Air New Zealand', code: 'NZ', match: /air new zealand|(^|\W)nz(\W|$)/i, logo: './assets/airlines/air-new-zealand.svg', color: '#111827' },
+            { name: 'Virgin Australia', code: 'VA', match: /virgin australia|(^|\W)va(\W|$)/i, logo: './assets/airlines/virgin-australia.svg', color: '#7e225b' }
         ];
 
         function showToast(message, type = '') {
@@ -1130,28 +1127,36 @@
             return name ? `${code.toUpperCase()} — ${name}` : airport || '-';
         }
 
-        function getAirlineBrand(airline, index = 0) {
-            const knownBrand = airlineBrands.find(brand => brand.match.test(String(airline || '')));
-            if(knownBrand) return knownBrand;
-            const mark = String(airline || '').split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase() || '✈';
-            return { mark, background: flightColors[index % flightColors.length], color: '#ffffff' };
+        function getAirlineBrand(airline) {
+            return airlineBrands.find(brand => brand.match.test(String(airline || ''))) || null;
         }
 
-        function createAirlineMark(airline, index = 0) {
-            const brand = getAirlineBrand(airline, index);
-            const mark = document.createElement('span');
-            mark.className = 'airline-mark';
-            mark.textContent = brand.mark;
-            mark.style.backgroundColor = brand.background;
-            mark.style.color = brand.color;
-            mark.setAttribute('aria-hidden', 'true');
-            return mark;
+        function normalizeAirlineName(airline) {
+            const name = String(airline || '').trim();
+            const brand = getAirlineBrand(name);
+            return brand ? `${brand.name} (${brand.code})` : name;
         }
 
-        function createAirlineDisplay(airline, index = 0) {
+        function createAirlineMark(airline) {
+            const brand = getAirlineBrand(airline);
+            if(!brand) return null;
+            const logo = document.createElement('img');
+            logo.className = 'airline-logo';
+            logo.src = brand.logo;
+            logo.alt = `${normalizeAirlineName(airline)} logo`;
+            logo.width = 112;
+            logo.height = 32;
+            logo.loading = 'eager';
+            logo.decoding = 'async';
+            return logo;
+        }
+
+        function createAirlineDisplay(airline) {
             const display = document.createElement('span');
             display.className = 'airline-legend-item';
-            display.append(createAirlineMark(airline, index), document.createTextNode(airline));
+            const logo = createAirlineMark(airline);
+            if(logo) display.appendChild(logo);
+            display.appendChild(document.createTextNode(normalizeAirlineName(airline)));
             return display;
         }
 
@@ -1180,6 +1185,7 @@
         function setFlightChoice(type, value) {
             const select = document.getElementById(`fl-${type}`);
             const customInput = document.getElementById(`fl-${type}-other`);
+            if(type === 'airline') value = normalizeAirlineName(value);
             const optionExists = [...select.options].some(option => option.value === value);
             if(optionExists) {
                 select.value = value;
@@ -1348,12 +1354,12 @@
             }
             [...flightRows].reverse().forEach((r, idx) => {
                 const tr = document.createElement('tr');
-                const airlines = [...new Set(flightRows.map(row => row.airline))];
+                const airlines = [...new Set(flightRows.map(row => normalizeAirlineName(row.airline)))];
                 const values = [idx + 1, fmtDate(r.checked_on), null, `${formatAirport(r.origin)} ⇄ ${formatAirport(r.destination)}`, fmtDate(r.depart_date), fmtDate(r.return_date), fmtPrice(r), formatAirport(r.transit), fmtLayover(r.layover_minutes)];
                 values.forEach((value, valueIndex) => {
                     const td = document.createElement('td');
                     td.className = 'p-2.5 text-slate-700';
-                    if(valueIndex === 2) td.appendChild(createAirlineDisplay(r.airline, airlines.indexOf(r.airline)));
+                    if(valueIndex === 2) td.appendChild(createAirlineDisplay(r.airline, airlines.indexOf(normalizeAirlineName(r.airline))));
                     else td.textContent = value;
                     tr.appendChild(td);
                 });
@@ -1382,8 +1388,7 @@
             const airlineLabel = document.createElement('span');
             airlineLabel.className = 'font-semibold text-slate-900';
             airlineLabel.textContent = 'Syarikat: ';
-            const airlines = [...new Set(flightRows.map(item => item.airline))];
-            airlineLine.append(airlineLabel, createAirlineDisplay(row.airline, airlines.indexOf(row.airline)));
+            airlineLine.append(airlineLabel, createAirlineDisplay(row.airline));
             box.appendChild(airlineLine);
             const lines = [
                 ['Harga', fmtPrice(row)],
@@ -1431,21 +1436,21 @@
                 return;
             }
             const dates = [...new Set(rows.map(r => r.checked_on))].sort();
-            const airlines = [...new Set(rows.map(r => r.airline))];
-            airlines.forEach((airline, index) => legend.appendChild(createAirlineDisplay(airline, index)));
+            const airlines = [...new Set(rows.map(r => normalizeAirlineName(r.airline)))];
+            airlines.forEach(airline => legend.appendChild(createAirlineDisplay(airline)));
             const currencies = [...new Set(rows.map(row => row.currency))];
             currencyNote.classList.toggle('hidden', currencies.length < 2);
             if(!window.Chart) return;
             const cell = {};
-            rows.forEach(r => { cell[`${r.airline}|${r.checked_on}`] = r; });
+            rows.forEach(r => { cell[`${normalizeAirlineName(r.airline)}|${r.checked_on}`] = r; });
             const dark = document.body.classList.contains('theme-dark');
             const textColor = dark ? '#e2e8f0' : '#1e293b';
             const gridColor = dark ? 'rgba(148,163,184,.25)' : 'rgba(30,41,59,.15)';
             const datasets = airlines.map((airline, i) => ({
                 label: airline,
                 data: dates.map(d => cell[`${airline}|${d}`] ? Number(cell[`${airline}|${d}`].price) : null),
-                borderColor: getAirlineBrand(airline, i).background,
-                backgroundColor: getAirlineBrand(airline, i).background,
+                borderColor: getAirlineBrand(airline)?.color || flightColors[i % flightColors.length],
+                backgroundColor: getAirlineBrand(airline)?.color || flightColors[i % flightColors.length],
                 spanGaps: true,
                 tension: 0.25,
                 pointRadius: 6,
