@@ -16,6 +16,41 @@
         button:not(:disabled), summary, select { cursor: pointer; }
         button:disabled { cursor: not-allowed; opacity: .75; }
         .touch-target { min-height: 44px; }
+        button:not(:disabled) { transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; }
+        @media (hover: hover) {
+            button:not(:disabled):hover { transform: translateY(-1px); }
+        }
+        button:not(:disabled):active { transform: scale(.97); }
+        #nav-breadcrumb {
+            border: 1px solid rgba(255,255,255,.28);
+            background: linear-gradient(135deg, rgba(255,255,255,.2), rgba(15,23,42,.16));
+            box-shadow: 0 4px 14px rgba(15,23,42,.14), inset 0 1px rgba(255,255,255,.16);
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            letter-spacing: .01em;
+        }
+        #nav-breadcrumb::before {
+            content: "✦";
+            display: inline-block;
+            margin-right: .4rem;
+            color: #fde68a;
+        }
+        .airline-mark {
+            display: inline-grid;
+            flex: 0 0 auto;
+            place-items: center;
+            min-width: 2.25rem;
+            height: 1.75rem;
+            padding: 0 .4rem;
+            border: 1px solid currentColor;
+            border-radius: .55rem;
+            font-size: .65rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .airline-legend-item { display: inline-flex; align-items: center; gap: .45rem; }
         #toast-box { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: .5rem; width: min(92vw, 26rem); pointer-events: none; }
         .toast { pointer-events: auto; padding: .75rem 1rem; border-radius: .75rem; font-size: .875rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.25); background: #0f172a; color: #fff; }
         .toast.error { background: #9f1239; }
@@ -84,7 +119,7 @@
                     📊 Panel Guru
                 </button>
                 <button id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Tukar tema" title="Tukar tema" class="shrink-0 w-9 h-9 grid place-items-center rounded-lg border border-indigo-300/40 bg-indigo-700 hover:bg-indigo-800 transition text-lg">☾</button>
-                <div id="nav-breadcrumb" class="text-sm bg-indigo-800 px-3 py-1.5 rounded-full hidden md:block">
+                <div id="nav-breadcrumb" role="status" aria-live="polite" class="text-xs px-3 py-1.5 rounded-full hidden md:block">
                     Halaman Utama
                 </div>
             </div>
@@ -228,22 +263,54 @@
                     <h4 id="flight-form-title" class="font-bold text-slate-900">Tambah harga baharu</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <label class="block text-sm font-medium text-slate-700">Syarikat penerbangan
-                            <input id="fl-airline" required maxlength="60" list="fl-airline-list" placeholder="cth: Qantas" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                            <datalist id="fl-airline-list"></datalist>
+                            <select id="fl-airline" required onchange="updateFlightChoice('airline')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                <option value="SIA (Singapore Airlines)">SIA — Singapore Airlines</option>
+                                <option value="Qantas">Qantas</option>
+                                <option value="Malaysia Airlines (MH)">Malaysia Airlines (MH)</option>
+                                <option value="Air New Zealand (NZ)">Air New Zealand (NZ)</option>
+                                <option value="Virgin Australia">Virgin Australia</option>
+                                <option value="__other__">Lain-lain (isi sendiri)</option>
+                            </select>
+                            <input id="fl-airline-other" maxlength="60" oninput="updateAirlinePreview()" placeholder="Nama syarikat penerbangan" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <span id="fl-airline-mark" class="mt-2 inline-flex items-center gap-2 text-xs text-slate-500" aria-live="polite"></span>
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Harga
                             <input id="fl-price" type="number" required min="0" step="0.01" inputmode="decimal" placeholder="cth: 1450" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Mata wang
-                            <input id="fl-currency" required maxlength="3" value="SGD" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target uppercase">
+                            <select id="fl-currency" required onchange="updateFlightChoice('currency')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                <option value="SGD">SGD — Dolar Singapura</option>
+                                <option value="MYR">MYR — Ringgit Malaysia</option>
+                                <option value="NZD">NZD — Dolar New Zealand</option>
+                                <option value="__other__">Lain-lain (isi sendiri)</option>
+                            </select>
+                            <input id="fl-currency-other" maxlength="8" placeholder="Kod mata wang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target uppercase">
                         </label>
-                        <label class="block text-sm font-medium text-slate-700">Dari (kod lapangan terbang)
-                            <input id="fl-origin" required maxlength="40" value="SIN" list="fl-origin-list" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                            <datalist id="fl-origin-list"></datalist>
+                        <label class="block text-sm font-medium text-slate-700">Dari
+                            <select id="fl-origin" required onchange="updateFlightChoice('origin')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                <option value="SIN">SIN — Singapore Changi International Airport</option>
+                                <option value="KUL">KUL — Kuala Lumpur International Airport</option>
+                                <option value="ZQN">ZQN — Queenstown Airport</option>
+                                <option value="CHC">CHC — Christchurch Airport</option>
+                                <option value="AKL">AKL — Auckland Airport</option>
+                                <option value="MEL">MEL — Melbourne Airport</option>
+                                <option value="SYD">SYD — Sydney Airport</option>
+                                <option value="__other__">Lain-lain (isi sendiri)</option>
+                            </select>
+                            <input id="fl-origin-other" maxlength="80" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Ke
-                            <input id="fl-destination" required maxlength="40" value="ZQN" list="fl-destination-list" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                            <datalist id="fl-destination-list"></datalist>
+                            <select id="fl-destination" required onchange="updateFlightChoice('destination')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                <option value="SIN">SIN — Singapore Changi International Airport</option>
+                                <option value="KUL">KUL — Kuala Lumpur International Airport</option>
+                                <option value="ZQN" selected>ZQN — Queenstown Airport</option>
+                                <option value="CHC">CHC — Christchurch Airport</option>
+                                <option value="AKL">AKL — Auckland Airport</option>
+                                <option value="MEL">MEL — Melbourne Airport</option>
+                                <option value="SYD">SYD — Sydney Airport</option>
+                                <option value="__other__">Lain-lain (isi sendiri)</option>
+                            </select>
+                            <input id="fl-destination-other" maxlength="80" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Tarikh semak harga
                             <input id="fl-checked" type="date" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
@@ -255,7 +322,18 @@
                             <input id="fl-return" type="date" value="2027-06-11" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Transit (lapangan terbang)
-                            <input id="fl-transit" maxlength="60" placeholder="cth: Sydney (SYD)" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <select id="fl-transit" onchange="updateFlightChoice('transit')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                <option value="">Tiada transit</option>
+                                <option value="SIN">SIN — Singapore Changi International Airport</option>
+                                <option value="KUL">KUL — Kuala Lumpur International Airport</option>
+                                <option value="ZQN">ZQN — Queenstown Airport</option>
+                                <option value="CHC">CHC — Christchurch Airport</option>
+                                <option value="AKL">AKL — Auckland Airport</option>
+                                <option value="MEL">MEL — Melbourne Airport</option>
+                                <option value="SYD">SYD — Sydney Airport</option>
+                                <option value="__other__">Lain-lain (isi sendiri)</option>
+                            </select>
+                            <input id="fl-transit-other" maxlength="80" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <div class="grid grid-cols-2 gap-3">
                             <label class="block text-sm font-medium text-slate-700">Layover (jam)
@@ -280,8 +358,10 @@
                         <label class="block text-sm font-medium text-slate-700">Laluan &amp; tarikh perjalanan
                             <select id="fl-route-filter" onchange="renderFlightChart()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
                         </label>
+                        <div id="flight-chart-legend" class="flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Syarikat penerbangan dalam graf"></div>
                         <div class="relative h-72 sm:h-96"><canvas id="flight-chart" aria-label="Graf perubahan harga tiket mengikut tarikh"></canvas></div>
                         <p id="flight-chart-empty" class="hidden text-center text-sm text-slate-500">Belum ada data. Isi data dahulu di tab Isi Data.</p>
+                        <p id="flight-chart-currency-note" class="hidden rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Data pada graf menggunakan mata wang berbeza dan tidak ditukar; jangan bandingkan nilai secara terus.</p>
                         <p class="text-xs text-slate-500">Setiap garisan ialah satu syarikat penerbangan. Sentuh atau klik satu titik untuk lihat butiran.</p>
                     </div>
                     <div id="flight-detail" class="hidden bg-white border-2 border-indigo-400 rounded-2xl p-4 sm:p-5 space-y-1 text-sm text-slate-700" aria-live="polite"></div>
@@ -337,7 +417,7 @@
                 <div class="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/90 via-slate-900/70 to-slate-900/20"></div>
                 <div class="max-w-3xl p-6 sm:p-10 lg:p-12">
                     <p class="text-xs sm:text-sm font-semibold uppercase text-emerald-300">Ruang belajar · permainan · inspirasi</p>
-                    <h2 class="text-3xl sm:text-5xl font-bold leading-tight mt-3">Selamat datang ke Hub Cg Azri</h2>
+                    <h2 class="text-3xl sm:text-5xl font-bold leading-tight mt-3">Selamat datang ke Hub Cg Azri A</h2>
                     <p class="text-slate-100 text-sm sm:text-base max-w-xl mt-4">Satu tempat untuk belajar, uji minda dan teroka perkara baharu.</p>
                     <div class="flex flex-wrap gap-3 mt-6">
                         <button type="button" onclick="document.getElementById('ask-category').scrollIntoView({behavior:'smooth'}); document.getElementById('ask-category').open = true" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-semibold px-4 py-2.5 rounded-xl transition">Teroka pembelajaran</button>
@@ -1001,6 +1081,22 @@
         let flightChart = null;
         let editingFlightId = null;
         const flightColors = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#a855f7', '#84cc16', '#ec4899', '#f97316', '#14b8a6'];
+        const flightAirports = {
+            SIN: 'Singapore Changi International Airport',
+            KUL: 'Kuala Lumpur International Airport',
+            ZQN: 'Queenstown Airport',
+            CHC: 'Christchurch Airport',
+            AKL: 'Auckland Airport',
+            MEL: 'Melbourne Airport',
+            SYD: 'Sydney Airport'
+        };
+        const airlineBrands = [
+            { match: /singapore airlines|(^|\W)sia(\W|$)/i, mark: 'SIA', background: '#0b1f49', color: '#f7c75a' },
+            { match: /qantas/i, mark: 'Q', background: '#c8102e', color: '#ffffff' },
+            { match: /malaysia|(^|\W)mh(\W|$)/i, mark: 'MH', background: '#1d4ed8', color: '#ffd54f' },
+            { match: /air new zealand|(^|\W)nz(\W|$)/i, mark: 'NZ', background: '#111827', color: '#ffffff' },
+            { match: /virgin australia/i, mark: 'VA', background: '#7e225b', color: '#ffffff' }
+        ];
 
         function showToast(message, type = '') {
             const toast = document.createElement('div');
@@ -1027,12 +1123,83 @@
             return `${row.currency} ${Number(row.price).toLocaleString('ms-MY', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
         }
 
+        function formatAirport(value) {
+            const airport = String(value || '').trim();
+            const code = airport.match(/^[A-Za-z]{3}$/)?.[0] || airport.match(/\(([A-Za-z]{3})\)/)?.[1];
+            const name = code && flightAirports[code.toUpperCase()];
+            return name ? `${code.toUpperCase()} — ${name}` : airport || '-';
+        }
+
+        function getAirlineBrand(airline, index = 0) {
+            const knownBrand = airlineBrands.find(brand => brand.match.test(String(airline || '')));
+            if(knownBrand) return knownBrand;
+            const mark = String(airline || '').split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase() || '✈';
+            return { mark, background: flightColors[index % flightColors.length], color: '#ffffff' };
+        }
+
+        function createAirlineMark(airline, index = 0) {
+            const brand = getAirlineBrand(airline, index);
+            const mark = document.createElement('span');
+            mark.className = 'airline-mark';
+            mark.textContent = brand.mark;
+            mark.style.backgroundColor = brand.background;
+            mark.style.color = brand.color;
+            mark.setAttribute('aria-hidden', 'true');
+            return mark;
+        }
+
+        function createAirlineDisplay(airline, index = 0) {
+            const display = document.createElement('span');
+            display.className = 'airline-legend-item';
+            display.append(createAirlineMark(airline, index), document.createTextNode(airline));
+            return display;
+        }
+
+        function updateAirlinePreview() {
+            const airline = getFlightChoice('airline');
+            const preview = document.getElementById('fl-airline-mark');
+            preview.replaceChildren();
+            if(airline) preview.append(createAirlineDisplay(airline));
+        }
+
+        function updateFlightChoice(type) {
+            const select = document.getElementById(`fl-${type}`);
+            const customInput = document.getElementById(`fl-${type}-other`);
+            const useCustom = select.value === '__other__';
+            customInput.classList.toggle('hidden', !useCustom);
+            customInput.required = useCustom;
+            if(type === 'airline') updateAirlinePreview();
+        }
+
+        function getFlightChoice(type) {
+            const select = document.getElementById(`fl-${type}`);
+            if(select.value === '__other__') return document.getElementById(`fl-${type}-other`).value.trim();
+            return select.value.trim();
+        }
+
+        function setFlightChoice(type, value) {
+            const select = document.getElementById(`fl-${type}`);
+            const customInput = document.getElementById(`fl-${type}-other`);
+            const optionExists = [...select.options].some(option => option.value === value);
+            if(optionExists) {
+                select.value = value;
+                customInput.value = '';
+            } else if(type === 'transit' && !value) {
+                select.value = '';
+                customInput.value = '';
+            } else {
+                select.value = '__other__';
+                customInput.value = value || '';
+            }
+            updateFlightChoice(type);
+        }
+
         function routeKey(row) {
             return [row.origin, row.destination, row.depart_date, row.return_date || ''].join('|');
         }
 
         function routeLabel(row) {
-            return `${row.origin} ⇄ ${row.destination} · ${fmtDate(row.depart_date)}${row.return_date ? ' – ' + fmtDate(row.return_date) : ''}`;
+            return `${formatAirport(row.origin)} ⇄ ${formatAirport(row.destination)} · ${fmtDate(row.depart_date)}${row.return_date ? ' – ' + fmtDate(row.return_date) : ''}`;
         }
 
         function showFlightError(error) {
@@ -1078,20 +1245,7 @@
             if(tab === 'chart') renderFlightChart();
         }
 
-        function fillDatalist(id, values) {
-            const list = document.getElementById(id);
-            list.innerHTML = '';
-            [...new Set(values.filter(Boolean))].sort().forEach(value => {
-                const option = document.createElement('option');
-                option.value = value;
-                list.appendChild(option);
-            });
-        }
-
         function refreshFlightLists() {
-            fillDatalist('fl-airline-list', flightRows.map(r => r.airline));
-            fillDatalist('fl-origin-list', flightRows.map(r => r.origin));
-            fillDatalist('fl-destination-list', flightRows.map(r => r.destination));
             const select = document.getElementById('fl-route-filter');
             const previous = select.value;
             select.innerHTML = '';
@@ -1109,6 +1263,7 @@
         function resetFlightForm() {
             editingFlightId = null;
             document.getElementById('flight-form').reset();
+            ['airline', 'currency', 'origin', 'destination', 'transit'].forEach(updateFlightChoice);
             document.getElementById('fl-checked').value = new Date().toISOString().slice(0, 10);
             document.getElementById('flight-form-title').textContent = 'Tambah harga baharu';
             document.getElementById('fl-submit').textContent = 'Simpan';
@@ -1121,15 +1276,15 @@
             const layoverM = document.getElementById('fl-layover-m').value;
             const hasLayover = layoverH !== '' || layoverM !== '';
             const payload = {
-                airline: document.getElementById('fl-airline').value.trim(),
+                airline: getFlightChoice('airline'),
                 price: Number(document.getElementById('fl-price').value),
-                currency: document.getElementById('fl-currency').value.trim().toUpperCase(),
-                origin: document.getElementById('fl-origin').value.trim().toUpperCase(),
-                destination: document.getElementById('fl-destination').value.trim().toUpperCase(),
+                currency: getFlightChoice('currency').toUpperCase(),
+                origin: getFlightChoice('origin'),
+                destination: getFlightChoice('destination'),
                 checked_on: document.getElementById('fl-checked').value,
                 depart_date: document.getElementById('fl-depart').value,
                 return_date: document.getElementById('fl-return').value || null,
-                transit: document.getElementById('fl-transit').value.trim() || null,
+                transit: getFlightChoice('transit') || null,
                 layover_minutes: hasLayover ? (Number(layoverH || 0) * 60 + Number(layoverM || 0)) : null,
                 notes: document.getElementById('fl-notes').value.trim() || null
             };
@@ -1151,15 +1306,15 @@
             const row = flightRows.find(r => r.id === id);
             if(!row) return;
             editingFlightId = id;
-            document.getElementById('fl-airline').value = row.airline;
+            setFlightChoice('airline', row.airline);
             document.getElementById('fl-price').value = row.price;
-            document.getElementById('fl-currency').value = row.currency;
-            document.getElementById('fl-origin').value = row.origin;
-            document.getElementById('fl-destination').value = row.destination;
+            setFlightChoice('currency', row.currency);
+            setFlightChoice('origin', row.origin);
+            setFlightChoice('destination', row.destination);
             document.getElementById('fl-checked').value = row.checked_on;
             document.getElementById('fl-depart').value = row.depart_date;
             document.getElementById('fl-return').value = row.return_date || '';
-            document.getElementById('fl-transit').value = row.transit || '';
+            setFlightChoice('transit', row.transit || '');
             const mins = row.layover_minutes;
             document.getElementById('fl-layover-h').value = mins === null ? '' : Math.floor(mins / 60);
             document.getElementById('fl-layover-m').value = mins === null ? '' : mins % 60;
@@ -1193,11 +1348,13 @@
             }
             [...flightRows].reverse().forEach((r, idx) => {
                 const tr = document.createElement('tr');
-                const values = [idx + 1, fmtDate(r.checked_on), r.airline, `${r.origin} ⇄ ${r.destination}`, fmtDate(r.depart_date), fmtDate(r.return_date), fmtPrice(r), r.transit || '-', fmtLayover(r.layover_minutes)];
-                values.forEach(value => {
+                const airlines = [...new Set(flightRows.map(row => row.airline))];
+                const values = [idx + 1, fmtDate(r.checked_on), null, `${formatAirport(r.origin)} ⇄ ${formatAirport(r.destination)}`, fmtDate(r.depart_date), fmtDate(r.return_date), fmtPrice(r), formatAirport(r.transit), fmtLayover(r.layover_minutes)];
+                values.forEach((value, valueIndex) => {
                     const td = document.createElement('td');
                     td.className = 'p-2.5 text-slate-700';
-                    td.textContent = value;
+                    if(valueIndex === 2) td.appendChild(createAirlineDisplay(r.airline, airlines.indexOf(r.airline)));
+                    else td.textContent = value;
                     tr.appendChild(td);
                 });
                 const actions = document.createElement('td');
@@ -1221,13 +1378,19 @@
         function showFlightDetail(row) {
             const box = document.getElementById('flight-detail');
             box.innerHTML = '';
+            const airlineLine = document.createElement('p');
+            const airlineLabel = document.createElement('span');
+            airlineLabel.className = 'font-semibold text-slate-900';
+            airlineLabel.textContent = 'Syarikat: ';
+            const airlines = [...new Set(flightRows.map(item => item.airline))];
+            airlineLine.append(airlineLabel, createAirlineDisplay(row.airline, airlines.indexOf(row.airline)));
+            box.appendChild(airlineLine);
             const lines = [
-                ['Syarikat', row.airline],
                 ['Harga', fmtPrice(row)],
                 ['Disemak pada', fmtDate(row.checked_on)],
-                ['Laluan', `${row.origin} ⇄ ${row.destination}`],
+                ['Laluan', `${formatAirport(row.origin)} ⇄ ${formatAirport(row.destination)}`],
                 ['Pergi / Balik', `${fmtDate(row.depart_date)} / ${fmtDate(row.return_date)}`],
-                ['Transit', row.transit || '-'],
+                ['Transit', formatAirport(row.transit)],
                 ['Layover', fmtLayover(row.layover_minutes)],
                 ['Catatan', row.notes || '-']
             ];
@@ -1256,13 +1419,23 @@
             const empty = document.getElementById('flight-chart-empty');
             const key = document.getElementById('fl-route-filter').value;
             const rows = flightRows.filter(r => routeKey(r) === key);
+            const legend = document.getElementById('flight-chart-legend');
+            const currencyNote = document.getElementById('flight-chart-currency-note');
+            legend.replaceChildren();
             document.getElementById('flight-detail').classList.add('hidden');
             if(flightChart) { flightChart.destroy(); flightChart = null; }
             empty.classList.toggle('hidden', rows.length > 0);
             canvas.classList.toggle('hidden', rows.length === 0);
-            if(rows.length === 0 || !window.Chart) return;
+            if(rows.length === 0) {
+                currencyNote.classList.add('hidden');
+                return;
+            }
             const dates = [...new Set(rows.map(r => r.checked_on))].sort();
             const airlines = [...new Set(rows.map(r => r.airline))];
+            airlines.forEach((airline, index) => legend.appendChild(createAirlineDisplay(airline, index)));
+            const currencies = [...new Set(rows.map(row => row.currency))];
+            currencyNote.classList.toggle('hidden', currencies.length < 2);
+            if(!window.Chart) return;
             const cell = {};
             rows.forEach(r => { cell[`${r.airline}|${r.checked_on}`] = r; });
             const dark = document.body.classList.contains('theme-dark');
@@ -1271,8 +1444,8 @@
             const datasets = airlines.map((airline, i) => ({
                 label: airline,
                 data: dates.map(d => cell[`${airline}|${d}`] ? Number(cell[`${airline}|${d}`].price) : null),
-                borderColor: flightColors[i % flightColors.length],
-                backgroundColor: flightColors[i % flightColors.length],
+                borderColor: getAirlineBrand(airline, i).background,
+                backgroundColor: getAirlineBrand(airline, i).background,
                 spanGaps: true,
                 tension: 0.25,
                 pointRadius: 6,
@@ -1291,10 +1464,21 @@
                         const row = cell[`${airlines[datasetIndex]}|${dates[index]}`];
                         if(row) showFlightDetail(row);
                     },
-                    plugins: { legend: { labels: { color: textColor } }, tooltip: { enabled: true } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: context => {
+                                    const row = cell[`${airlines[context.datasetIndex]}|${dates[context.dataIndex]}`];
+                                    return row ? `${row.airline}: ${fmtPrice(row)}` : context.dataset.label;
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         x: { ticks: { color: textColor }, grid: { color: gridColor }, title: { display: true, text: 'Tarikh semak harga', color: textColor } },
-                        y: { ticks: { color: textColor }, grid: { color: gridColor }, title: { display: true, text: `Harga (${rows[rows.length - 1].currency})`, color: textColor } }
+                        y: { ticks: { color: textColor }, grid: { color: gridColor }, title: { display: true, text: currencies.length === 1 ? `Harga (${currencies[0]})` : 'Harga (mata wang asal)', color: textColor } }
                     }
                 }
             });
