@@ -48,6 +48,9 @@
             vertical-align: middle;
         }
         .airline-legend-item { display: inline-flex; align-items: center; gap: .45rem; }
+        .flight-aircraft-icon { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; color: #4f46e5; }
+        .flight-aircraft-display { display: inline-flex; align-items: center; gap: .35rem; font-weight: 500; }
+        body.theme-dark .flight-aircraft-icon { color: #a5b4fc; }
         #toast-box { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: .5rem; width: min(92vw, 26rem); pointer-events: none; }
         .toast { pointer-events: auto; padding: .75rem 1rem; border-radius: .75rem; font-size: .875rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.25); background: #0f172a; color: #fff; }
         .toast.error { background: #9f1239; }
@@ -260,7 +263,7 @@
                     <h4 id="flight-form-title" class="font-bold text-slate-900">Tambah harga baharu</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <label class="block text-sm font-medium text-slate-700">Syarikat penerbangan
-                            <select id="fl-airline" required onchange="updateFlightChoice('airline')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <select id="fl-airline" required onchange="updateFlightChoice('airline'); updateFlightSegments()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 <option value="Singapore Airlines (SQ)">Singapore Airlines (SQ)</option>
                                 <option value="Qantas (QF)">Qantas (QF)</option>
                                 <option value="Malaysia Airlines (MH)">Malaysia Airlines (MH)</option>
@@ -268,7 +271,7 @@
                                 <option value="Virgin Australia (VA)">Virgin Australia (VA)</option>
                                 <option value="__other__">Lain-lain (isi sendiri)</option>
                             </select>
-                            <input id="fl-airline-other" maxlength="60" oninput="updateAirlinePreview()" placeholder="Nama syarikat penerbangan" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-airline-other" maxlength="60" oninput="updateAirlinePreview(); updateFlightSegments()" placeholder="Nama syarikat penerbangan" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                             <span id="fl-airline-mark" class="mt-2 inline-flex items-center gap-2 text-xs text-slate-500" aria-live="polite"></span>
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Harga
@@ -284,7 +287,7 @@
                             <input id="fl-currency-other" maxlength="8" placeholder="Kod mata wang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target uppercase">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Dari
-                            <select id="fl-origin" required onchange="updateFlightChoice('origin')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <select id="fl-origin" required onchange="updateFlightChoice('origin'); updateFlightSegments()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 <option value="SIN">SIN — Singapore Changi International Airport</option>
                                 <option value="KUL">KUL — Kuala Lumpur International Airport</option>
                                 <option value="ZQN">ZQN — Queenstown Airport</option>
@@ -294,10 +297,10 @@
                                 <option value="SYD">SYD — Sydney Airport</option>
                                 <option value="__other__">Lain-lain (isi sendiri)</option>
                             </select>
-                            <input id="fl-origin-other" maxlength="80" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-origin-other" maxlength="80" oninput="updateFlightSegments()" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Ke
-                            <select id="fl-destination" required onchange="updateFlightChoice('destination')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <select id="fl-destination" required onchange="updateFlightChoice('destination'); updateFlightSegments()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 <option value="SIN">SIN — Singapore Changi International Airport</option>
                                 <option value="KUL">KUL — Kuala Lumpur International Airport</option>
                                 <option value="ZQN" selected>ZQN — Queenstown Airport</option>
@@ -307,7 +310,7 @@
                                 <option value="SYD">SYD — Sydney Airport</option>
                                 <option value="__other__">Lain-lain (isi sendiri)</option>
                             </select>
-                            <input id="fl-destination-other" maxlength="80" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-destination-other" maxlength="80" oninput="updateFlightSegments()" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Tarikh semak harga
                             <input id="fl-checked" type="date" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
@@ -318,27 +321,74 @@
                         <label class="block text-sm font-medium text-slate-700">Tarikh balik
                             <input id="fl-return" type="date" value="2027-06-11" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
-                        <label class="block text-sm font-medium text-slate-700">Transit (lapangan terbang)
-                            <select id="fl-transit" onchange="updateFlightChoice('transit')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                                <option value="">Tiada transit</option>
-                                <option value="SIN">SIN — Singapore Changi International Airport</option>
-                                <option value="KUL">KUL — Kuala Lumpur International Airport</option>
-                                <option value="ZQN">ZQN — Queenstown Airport</option>
-                                <option value="CHC">CHC — Christchurch Airport</option>
-                                <option value="AKL">AKL — Auckland Airport</option>
-                                <option value="MEL">MEL — Melbourne Airport</option>
-                                <option value="SYD">SYD — Sydney Airport</option>
-                                <option value="__other__">Lain-lain (isi sendiri)</option>
-                            </select>
-                            <input id="fl-transit-other" maxlength="80" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                        </label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="block text-sm font-medium text-slate-700">Layover (jam)
-                                <input id="fl-layover-h" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                            </label>
-                            <label class="block text-sm font-medium text-slate-700">(minit)
-                                <input id="fl-layover-m" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                            </label>
+                        <div class="sm:col-span-2 lg:col-span-3 grid md:grid-cols-2 gap-4">
+                            <fieldset class="rounded-xl border border-slate-200 p-4 space-y-3">
+                                <legend class="px-1 text-sm font-semibold text-slate-800">Pergi · <span id="fl-outbound-route-label">laluan pergi</span></legend>
+                                <label class="block text-sm font-medium text-slate-700">Transit pergi (lapangan terbang)
+                                    <select id="fl-transit" onchange="updateFlightChoice('transit'); updateFlightSegments()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                        <option value="">Tiada transit</option>
+                                        <option value="SIN">SIN — Singapore Changi International Airport</option>
+                                        <option value="KUL">KUL — Kuala Lumpur International Airport</option>
+                                        <option value="ZQN">ZQN — Queenstown Airport</option>
+                                        <option value="CHC">CHC — Christchurch Airport</option>
+                                        <option value="AKL">AKL — Auckland Airport</option>
+                                        <option value="MEL">MEL — Melbourne Airport</option>
+                                        <option value="SYD">SYD — Sydney Airport</option>
+                                        <option value="__other__">Lain-lain (isi sendiri)</option>
+                                    </select>
+                                    <input id="fl-transit-other" maxlength="80" oninput="updateFlightSegments()" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                </label>
+                                <div id="fl-outbound-layover" class="grid grid-cols-2 gap-3">
+                                    <label class="block text-sm font-medium text-slate-700">Layover pergi (jam)
+                                        <input id="fl-layover-h" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    </label>
+                                    <label class="block text-sm font-medium text-slate-700">Minit
+                                        <input id="fl-layover-m" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    </label>
+                                </div>
+                                <label class="block text-sm font-medium text-slate-700"><span id="fl-outbound-aircraft-1-label">Pesawat perjalanan pergi</span>
+                                    <select id="fl-outbound-aircraft-1" onchange="updateAircraftChoice('outbound-aircraft-1')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
+                                    <input id="fl-outbound-aircraft-1-other" maxlength="80" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                </label>
+                                <label id="fl-outbound-segment-2" class="hidden block text-sm font-medium text-slate-700"><span id="fl-outbound-aircraft-2-label">Pesawat segmen seterusnya</span>
+                                    <select id="fl-outbound-aircraft-2" onchange="updateAircraftChoice('outbound-aircraft-2')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
+                                    <input id="fl-outbound-aircraft-2-other" maxlength="80" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                </label>
+                            </fieldset>
+                            <fieldset class="rounded-xl border border-slate-200 p-4 space-y-3">
+                                <legend class="px-1 text-sm font-semibold text-slate-800">Balik · <span id="fl-inbound-route-label">laluan balik</span></legend>
+                                <label class="block text-sm font-medium text-slate-700">Transit balik (lapangan terbang)
+                                    <select id="fl-transit-return" onchange="updateFlightChoice('transit-return'); updateFlightSegments()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                        <option value="">Tiada transit</option>
+                                        <option value="SIN">SIN — Singapore Changi International Airport</option>
+                                        <option value="KUL">KUL — Kuala Lumpur International Airport</option>
+                                        <option value="ZQN">ZQN — Queenstown Airport</option>
+                                        <option value="CHC">CHC — Christchurch Airport</option>
+                                        <option value="AKL">AKL — Auckland Airport</option>
+                                        <option value="MEL">MEL — Melbourne Airport</option>
+                                        <option value="SYD">SYD — Sydney Airport</option>
+                                        <option value="__other__">Lain-lain (isi sendiri)</option>
+                                    </select>
+                                    <input id="fl-transit-return-other" maxlength="80" oninput="updateFlightSegments()" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                </label>
+                                <div id="fl-inbound-layover" class="hidden grid grid-cols-2 gap-3">
+                                    <label class="block text-sm font-medium text-slate-700">Layover balik (jam)
+                                        <input id="fl-layover-return-h" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    </label>
+                                    <label class="block text-sm font-medium text-slate-700">Minit
+                                        <input id="fl-layover-return-m" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    </label>
+                                </div>
+                                <label class="block text-sm font-medium text-slate-700"><span id="fl-inbound-aircraft-1-label">Pesawat perjalanan balik</span>
+                                    <select id="fl-inbound-aircraft-1" onchange="updateAircraftChoice('inbound-aircraft-1')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
+                                    <input id="fl-inbound-aircraft-1-other" maxlength="80" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                </label>
+                                <label id="fl-inbound-segment-2" class="hidden block text-sm font-medium text-slate-700"><span id="fl-inbound-aircraft-2-label">Pesawat segmen seterusnya</span>
+                                    <select id="fl-inbound-aircraft-2" onchange="updateAircraftChoice('inbound-aircraft-2')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
+                                    <input id="fl-inbound-aircraft-2-other" maxlength="80" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                </label>
+                            </fieldset>
+                            <p id="fl-aircraft-hint" class="hidden text-xs text-slate-500 md:col-span-2"></p>
                         </div>
                         <label class="block text-sm font-medium text-slate-700 sm:col-span-2 lg:col-span-3">Catatan (pilihan)
                             <input id="fl-notes" maxlength="200" placeholder="cth: termasuk bagasi 23kg" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
@@ -368,7 +418,7 @@
                     <table class="w-full min-w-[900px] text-left border-collapse text-sm">
                         <thead>
                             <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
-                                <th class="p-3">#</th><th class="p-3">Disemak</th><th class="p-3">Syarikat</th><th class="p-3">Laluan</th><th class="p-3">Pergi</th><th class="p-3">Balik</th><th class="p-3">Harga</th><th class="p-3">Transit</th><th class="p-3">Layover</th><th class="p-3 text-center">Tindakan</th>
+                                <th class="p-3">#</th><th class="p-3">Disemak</th><th class="p-3">Syarikat</th><th class="p-3">Laluan</th><th class="p-3">Pergi</th><th class="p-3">Balik</th><th class="p-3">Harga</th><th class="p-3">Pergi · Transit / pesawat</th><th class="p-3">Balik · Transit / pesawat</th><th class="p-3 text-center">Tindakan</th>
                             </tr>
                         </thead>
                         <tbody id="flight-table-body" class="divide-y divide-slate-100"></tbody>
@@ -1094,6 +1144,20 @@
             { name: 'Air New Zealand', code: 'NZ', match: /air new zealand|(^|\W)nz(\W|$)/i, logo: './assets/airlines/air-new-zealand.svg', color: '#111827' },
             { name: 'Virgin Australia', code: 'VA', match: /virgin australia|(^|\W)va(\W|$)/i, logo: './assets/airlines/virgin-australia.svg', color: '#7e225b' }
         ];
+        const aircraftChoices = [
+            ['Airbus A380-800', 'Airbus A380-800'],
+            ['Airbus A350-900', 'Airbus A350-900'],
+            ['Airbus A330-900neo', 'Airbus A330-900neo · MH KUL–AKL (jadual)'],
+            ['Airbus A320neo', 'Airbus A320neo'],
+            ['Airbus A320', 'Airbus A320'],
+            ['Boeing 737-8 MAX', 'Boeing 737-8 MAX'],
+            ['__other__', 'Lain-lain (isi sendiri)']
+        ];
+        const flightDetailsPrefix = '[[flight-details:v1]]';
+        const flightDirections = {
+            outbound: { transit: 'transit', hours: 'layover-h', minutes: 'layover-m', aircraft: ['outbound-aircraft-1', 'outbound-aircraft-2'] },
+            inbound: { transit: 'transit-return', hours: 'layover-return-h', minutes: 'layover-return-m', aircraft: ['inbound-aircraft-1', 'inbound-aircraft-2'] }
+        };
 
         function showToast(message, type = '') {
             const toast = document.createElement('div');
@@ -1120,11 +1184,178 @@
             return `${row.currency} ${Number(row.price).toLocaleString('ms-MY', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
         }
 
+        function defaultFlightDetails(row) {
+            return {
+                note: row.notes || '',
+                outboundTransit: row.transit || '',
+                outboundLayoverMinutes: row.layover_minutes ?? null,
+                inboundTransit: '',
+                inboundLayoverMinutes: null,
+                outboundAircraft1: '',
+                outboundAircraft2: '',
+                inboundAircraft1: '',
+                inboundAircraft2: ''
+            };
+        }
+
+        function getFlightDetails(row) {
+            if(!String(row.notes || '').startsWith(flightDetailsPrefix)) return defaultFlightDetails(row);
+            try {
+                return { ...defaultFlightDetails(row), ...JSON.parse(row.notes.slice(flightDetailsPrefix.length)) };
+            } catch(error) {
+                console.error('Maklumat tambahan penerbangan tidak dapat dibaca.', error);
+                showToast('Maklumat transit/pesawat rosak untuk rekod ini.', 'error');
+                return defaultFlightDetails({ ...row, notes: 'Maklumat transit/pesawat tidak dapat dibaca.' });
+            }
+        }
+
+        function encodeFlightDetails(note, details) {
+            // Store added fields in the existing notes column so Supabase needs no schema migration.
+            return `${flightDetailsPrefix}${JSON.stringify({ ...details, note: note || '' })}`;
+        }
+
         function formatAirport(value) {
             const airport = String(value || '').trim();
             const code = airport.match(/^[A-Za-z]{3}$/)?.[0] || airport.match(/\(([A-Za-z]{3})\)/)?.[1];
             const name = code && flightAirports[code.toUpperCase()];
             return name ? `${code.toUpperCase()} — ${name}` : airport || '-';
+        }
+
+        function createAircraftIcon() {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+            svg.setAttribute('stroke-width', '1.8');
+            svg.setAttribute('stroke-linecap', 'round');
+            svg.setAttribute('stroke-linejoin', 'round');
+            svg.classList.add('flight-aircraft-icon');
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z');
+            svg.appendChild(path);
+            svg.setAttribute('aria-hidden', 'true');
+            return svg;
+        }
+
+        function createAircraftDisplay(model) {
+            const display = document.createElement('span');
+            display.className = 'flight-aircraft-display';
+            display.append(createAircraftIcon(), document.createTextNode(model));
+            return display;
+        }
+
+        function createDirectionSummary(row, direction) {
+            const details = getFlightDetails(row);
+            const fields = flightDirections[direction];
+            const outbound = direction === 'outbound';
+            const start = outbound ? row.origin : row.destination;
+            const end = outbound ? row.destination : row.origin;
+            const transit = details[`${direction}Transit`];
+            const container = document.createElement('div');
+            container.className = 'space-y-1';
+
+            const via = document.createElement('p');
+            via.textContent = transit
+                ? `Transit: ${formatAirport(transit)} · Layover: ${fmtLayover(details[`${direction}LayoverMinutes`])}`
+                : 'Transit: Tiada (langsung)';
+            container.appendChild(via);
+
+            fields.aircraft.forEach((aircraftId, index) => {
+                const model = details[`${direction}Aircraft${index + 1}`];
+                if(index === 1 && !transit) return;
+                const from = index === 0 ? start : transit;
+                const to = index === 0 && transit ? transit : end;
+                const aircraft = document.createElement('p');
+                const route = document.createElement('span');
+                route.className = 'text-slate-500';
+                route.textContent = `${formatAirport(from)} → ${formatAirport(to)}: `;
+                aircraft.appendChild(route);
+                if(model) aircraft.appendChild(createAircraftDisplay(model));
+                else {
+                    const missing = document.createElement('span');
+                    missing.className = 'text-slate-400';
+                    missing.textContent = 'Pesawat belum diisi';
+                    aircraft.appendChild(missing);
+                }
+                container.appendChild(aircraft);
+            });
+            return container;
+        }
+
+        function populateAircraftOptions() {
+            flightDirections.outbound.aircraft.concat(flightDirections.inbound.aircraft).forEach(id => {
+                const select = document.getElementById(`fl-${id}`);
+                if(select.options.length) return;
+                select.add(new Option('Pilih jenis pesawat (pilihan)', ''));
+                aircraftChoices.forEach(([value, label]) => select.add(new Option(label, value)));
+            });
+        }
+
+        function updateAircraftChoice(id) {
+            const select = document.getElementById(`fl-${id}`);
+            const customInput = document.getElementById(`fl-${id}-other`);
+            const useCustom = select.value === '__other__';
+            customInput.classList.toggle('hidden', !useCustom);
+            customInput.required = useCustom;
+        }
+
+        function getAircraftChoice(id) {
+            const select = document.getElementById(`fl-${id}`);
+            return select.value === '__other__'
+                ? document.getElementById(`fl-${id}-other`).value.trim()
+                : select.value.trim();
+        }
+
+        function setAircraftChoice(id, value) {
+            populateAircraftOptions();
+            const select = document.getElementById(`fl-${id}`);
+            const customInput = document.getElementById(`fl-${id}-other`);
+            const optionExists = [...select.options].some(option => option.value === value);
+            select.value = optionExists ? value : value ? '__other__' : '';
+            customInput.value = optionExists ? '' : value || '';
+            updateAircraftChoice(id);
+        }
+
+        function updateFlightSegments() {
+            const origin = getFlightChoice('origin');
+            const destination = getFlightChoice('destination');
+            const outboundTransit = getFlightChoice('transit');
+            const inboundTransit = getFlightChoice('transit-return');
+            const directions = [
+                { id: 'outbound', start: origin, end: destination, transit: outboundTransit, label: 'Pergi' },
+                { id: 'inbound', start: destination, end: origin, transit: inboundTransit, label: 'Balik' }
+            ];
+            directions.forEach(direction => {
+                const via = direction.transit;
+                const segmentTwo = document.getElementById(`fl-${direction.id}-segment-2`);
+                const layover = document.getElementById(`fl-${direction.id}-layover`);
+                segmentTwo.classList.toggle('hidden', !via);
+                layover.classList.toggle('hidden', !via);
+                if(!via) setAircraftChoice(`${direction.id}-aircraft-2`, '');
+                document.getElementById(`fl-${direction.id}-route-label`).textContent =
+                    `${formatAirport(direction.start)} ⇄ ${formatAirport(direction.end)}`;
+                document.getElementById(`fl-${direction.id}-aircraft-1-label`).textContent =
+                    via ? `Pesawat · ${formatAirport(direction.start)} → ${formatAirport(via)}` : `Pesawat · ${formatAirport(direction.start)} → ${formatAirport(direction.end)}`;
+                document.getElementById(`fl-${direction.id}-aircraft-2-label`).textContent =
+                    `Pesawat · ${formatAirport(via || direction.start)} → ${formatAirport(direction.end)}`;
+            });
+            const airline = getFlightChoice('airline');
+            const malaysiaRoute = /malaysia airlines?|(^|\W)mh(\W|$)/i.test(airline) &&
+                [[origin, destination], [destination, origin]].some(([start, end]) =>
+                    (start === 'KUL' && end === 'AKL') || (start === 'AKL' && end === 'KUL'));
+            const hint = document.getElementById('fl-aircraft-hint');
+            hint.replaceChildren();
+            if(malaysiaRoute) {
+                hint.appendChild(document.createTextNode('Nota: Malaysia Airlines telah menjadualkan Airbus A330-900neo bagi laluan KUL–AKL; jenis pesawat boleh berubah. '));
+                const schedule = document.createElement('a');
+                schedule.href = 'https://www.malaysiaairlines.com/hq/en/plan-trip/flight-schedule.html';
+                schedule.target = '_blank';
+                schedule.rel = 'noopener noreferrer';
+                schedule.className = 'font-semibold text-indigo-700 underline';
+                schedule.textContent = 'Semak jadual semasa dan rekod model pada tiket.';
+                hint.appendChild(schedule);
+            }
+            hint.classList.toggle('hidden', !malaysiaRoute);
         }
 
         function getAirlineBrand(airline) {
@@ -1182,6 +1413,28 @@
             return select.value.trim();
         }
 
+        function getLayoverMinutes(direction) {
+            const fields = flightDirections[direction];
+            if(!getFlightChoice(fields.transit)) return null;
+            const hours = document.getElementById(`fl-${fields.hours}`).value;
+            const minutes = document.getElementById(`fl-${fields.minutes}`).value;
+            if(hours === '' && minutes === '') return null;
+            return Number(hours || 0) * 60 + Number(minutes || 0);
+        }
+
+        function getFlightDetailsFromForm() {
+            return {
+                outboundTransit: getFlightChoice('transit'),
+                outboundLayoverMinutes: getLayoverMinutes('outbound'),
+                inboundTransit: getFlightChoice('transit-return'),
+                inboundLayoverMinutes: getLayoverMinutes('inbound'),
+                outboundAircraft1: getAircraftChoice('outbound-aircraft-1'),
+                outboundAircraft2: getAircraftChoice('outbound-aircraft-2'),
+                inboundAircraft1: getAircraftChoice('inbound-aircraft-1'),
+                inboundAircraft2: getAircraftChoice('inbound-aircraft-2')
+            };
+        }
+
         function setFlightChoice(type, value) {
             const select = document.getElementById(`fl-${type}`);
             const customInput = document.getElementById(`fl-${type}-other`);
@@ -1190,7 +1443,7 @@
             if(optionExists) {
                 select.value = value;
                 customInput.value = '';
-            } else if(type === 'transit' && !value) {
+            } else if(type.startsWith('transit') && !value) {
                 select.value = '';
                 customInput.value = '';
             } else {
@@ -1268,8 +1521,11 @@
 
         function resetFlightForm() {
             editingFlightId = null;
+            populateAircraftOptions();
             document.getElementById('flight-form').reset();
-            ['airline', 'currency', 'origin', 'destination', 'transit'].forEach(updateFlightChoice);
+            ['airline', 'currency', 'origin', 'destination', 'transit', 'transit-return'].forEach(updateFlightChoice);
+            flightDirections.outbound.aircraft.concat(flightDirections.inbound.aircraft).forEach(updateAircraftChoice);
+            updateFlightSegments();
             document.getElementById('fl-checked').value = new Date().toISOString().slice(0, 10);
             document.getElementById('flight-form-title').textContent = 'Tambah harga baharu';
             document.getElementById('fl-submit').textContent = 'Simpan';
@@ -1278,9 +1534,7 @@
 
         async function saveFlightPrice(event) {
             event.preventDefault();
-            const layoverH = document.getElementById('fl-layover-h').value;
-            const layoverM = document.getElementById('fl-layover-m').value;
-            const hasLayover = layoverH !== '' || layoverM !== '';
+            const details = getFlightDetailsFromForm();
             const payload = {
                 airline: getFlightChoice('airline'),
                 price: Number(document.getElementById('fl-price').value),
@@ -1290,9 +1544,9 @@
                 checked_on: document.getElementById('fl-checked').value,
                 depart_date: document.getElementById('fl-depart').value,
                 return_date: document.getElementById('fl-return').value || null,
-                transit: getFlightChoice('transit') || null,
-                layover_minutes: hasLayover ? (Number(layoverH || 0) * 60 + Number(layoverM || 0)) : null,
-                notes: document.getElementById('fl-notes').value.trim() || null
+                transit: details.outboundTransit || null,
+                layover_minutes: details.outboundLayoverMinutes,
+                notes: encodeFlightDetails(document.getElementById('fl-notes').value.trim(), details)
             };
             if(!payload.airline || !(payload.price >= 0)) { showToast('Syarikat dan harga diperlukan.', 'error'); return; }
             const query = editingFlightId
@@ -1312,6 +1566,7 @@
             const row = flightRows.find(r => r.id === id);
             if(!row) return;
             editingFlightId = id;
+            const details = getFlightDetails(row);
             setFlightChoice('airline', row.airline);
             document.getElementById('fl-price').value = row.price;
             setFlightChoice('currency', row.currency);
@@ -1320,11 +1575,22 @@
             document.getElementById('fl-checked').value = row.checked_on;
             document.getElementById('fl-depart').value = row.depart_date;
             document.getElementById('fl-return').value = row.return_date || '';
-            setFlightChoice('transit', row.transit || '');
-            const mins = row.layover_minutes;
-            document.getElementById('fl-layover-h').value = mins === null ? '' : Math.floor(mins / 60);
-            document.getElementById('fl-layover-m').value = mins === null ? '' : mins % 60;
-            document.getElementById('fl-notes').value = row.notes || '';
+            setFlightChoice('transit', details.outboundTransit);
+            setFlightChoice('transit-return', details.inboundTransit);
+            [
+                ['outbound', details.outboundLayoverMinutes],
+                ['inbound', details.inboundLayoverMinutes]
+            ].forEach(([direction, minutes]) => {
+                const fields = flightDirections[direction];
+                document.getElementById(`fl-${fields.hours}`).value = minutes === null ? '' : Math.floor(minutes / 60);
+                document.getElementById(`fl-${fields.minutes}`).value = minutes === null ? '' : minutes % 60;
+            });
+            setAircraftChoice('outbound-aircraft-1', details.outboundAircraft1);
+            setAircraftChoice('outbound-aircraft-2', details.outboundAircraft2);
+            setAircraftChoice('inbound-aircraft-1', details.inboundAircraft1);
+            setAircraftChoice('inbound-aircraft-2', details.inboundAircraft2);
+            updateFlightSegments();
+            document.getElementById('fl-notes').value = details.note;
             document.getElementById('flight-form-title').textContent = 'Edit data';
             document.getElementById('fl-submit').textContent = 'Kemas kini';
             document.getElementById('fl-cancel').classList.remove('hidden');
@@ -1355,11 +1621,13 @@
             [...flightRows].reverse().forEach((r, idx) => {
                 const tr = document.createElement('tr');
                 const airlines = [...new Set(flightRows.map(row => normalizeAirlineName(row.airline)))];
-                const values = [idx + 1, fmtDate(r.checked_on), null, `${formatAirport(r.origin)} ⇄ ${formatAirport(r.destination)}`, fmtDate(r.depart_date), fmtDate(r.return_date), fmtPrice(r), formatAirport(r.transit), fmtLayover(r.layover_minutes)];
+                const values = [idx + 1, fmtDate(r.checked_on), null, `${formatAirport(r.origin)} ⇄ ${formatAirport(r.destination)}`, fmtDate(r.depart_date), fmtDate(r.return_date), fmtPrice(r), null, null];
                 values.forEach((value, valueIndex) => {
                     const td = document.createElement('td');
                     td.className = 'p-2.5 text-slate-700';
                     if(valueIndex === 2) td.appendChild(createAirlineDisplay(r.airline, airlines.indexOf(normalizeAirlineName(r.airline))));
+                    else if(valueIndex === 7) td.appendChild(createDirectionSummary(r, 'outbound'));
+                    else if(valueIndex === 8) td.appendChild(createDirectionSummary(r, 'inbound'));
                     else td.textContent = value;
                     tr.appendChild(td);
                 });
@@ -1384,6 +1652,7 @@
         function showFlightDetail(row) {
             const box = document.getElementById('flight-detail');
             box.innerHTML = '';
+            const details = getFlightDetails(row);
             const airlineLine = document.createElement('p');
             const airlineLabel = document.createElement('span');
             airlineLabel.className = 'font-semibold text-slate-900';
@@ -1394,10 +1663,7 @@
                 ['Harga', fmtPrice(row)],
                 ['Disemak pada', fmtDate(row.checked_on)],
                 ['Laluan', `${formatAirport(row.origin)} ⇄ ${formatAirport(row.destination)}`],
-                ['Pergi / Balik', `${fmtDate(row.depart_date)} / ${fmtDate(row.return_date)}`],
-                ['Transit', formatAirport(row.transit)],
-                ['Layover', fmtLayover(row.layover_minutes)],
-                ['Catatan', row.notes || '-']
+                ['Tarikh pergi / balik', `${fmtDate(row.depart_date)} / ${fmtDate(row.return_date)}`]
             ];
             lines.forEach(([label, value]) => {
                 const p = document.createElement('p');
@@ -1407,6 +1673,21 @@
                 p.append(b, document.createTextNode(value));
                 box.appendChild(p);
             });
+            ['outbound', 'inbound'].forEach((direction, index) => {
+                const section = document.createElement('section');
+                section.className = 'rounded-xl border border-slate-200 p-3 space-y-1';
+                const heading = document.createElement('h4');
+                heading.className = 'font-semibold text-slate-900';
+                heading.textContent = index === 0 ? 'Pergi' : 'Balik';
+                section.append(heading, createDirectionSummary(row, direction));
+                box.appendChild(section);
+            });
+            const notes = document.createElement('p');
+            const notesLabel = document.createElement('span');
+            notesLabel.className = 'font-semibold text-slate-900';
+            notesLabel.textContent = 'Catatan: ';
+            notes.append(notesLabel, document.createTextNode(details.note || '-'));
+            box.appendChild(notes);
             const actions = document.createElement('div');
             actions.className = 'pt-2 flex gap-2';
             const edit = document.createElement('button');
