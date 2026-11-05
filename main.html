@@ -28,6 +28,10 @@
             backdrop-filter: blur(10px);
             font-weight: 600;
             letter-spacing: .01em;
+            min-width: 12rem;
+            flex-shrink: 0;
+            text-align: center;
+            white-space: nowrap;
         }
         #nav-breadcrumb::before {
             content: "✦";
@@ -110,11 +114,11 @@
 
     <!-- Navbar -->
     <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto w-full px-4 py-3 sm:py-4 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-3">
+        <div class="max-w-7xl mx-auto w-full px-4 py-3 sm:py-4 flex flex-col lg:flex-row lg:justify-between items-start sm:items-center gap-3">
             <h1 class="w-full min-w-0 text-lg sm:text-xl font-bold flex items-center gap-2 cursor-pointer leading-snug" onclick="goToPortal()">
                 🌐 Hub Pembelajaran & Latihan Interaktif
             </h1>
-            <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
+            <div class="w-full lg:w-auto flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
                 <button onclick="openTeacherAdmin()" class="shrink-0 text-[11px] sm:text-xs bg-indigo-700 hover:bg-indigo-800 text-white px-2.5 sm:px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 whitespace-nowrap">
                     📊 Panel Guru
                 </button>
@@ -872,11 +876,13 @@
         let teacherAuthenticated = false;
         let teacherRecords = [];
         let resultSubmitted = false;
+        const TEACHER_DASHBOARD_VIEW_KEY = "teacher-dashboard-view";
+        const TEACHER_FLIGHT_TAB_KEY = "teacher-flight-tab";
         const SUPABASE_URL = "https://svvaipcdqlgrgqdplykz.supabase.co";
         const SUPABASE_KEY = "sb_publishable_iPTOcNWjEksO87RUGrnlow_d6jYy7_0";
         const TEACHER_UID = "cf74022f-a7a8-487a-aa40-c5240bcd279e";
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: { persistSession: false }
+            auth: { persistSession: true }
         });
 
         async function getStudentRecords() {
@@ -907,6 +913,17 @@
             document.getElementById('teacher-login-error').classList.add('hidden');
             document.getElementById('teacher-login-status').classList.add('hidden');
             document.getElementById('teacher-login-modal').classList.remove('hidden');
+        }
+
+        function restoreTeacherDashboard(view) {
+            if(!teacherAuthenticated || !['home', 'records', 'flights'].includes(view)) return;
+            document.getElementById('portal-view').classList.add('hidden');
+            document.getElementById('module-linear-search').classList.add('hidden');
+            document.getElementById('mind-games-view').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.remove('hidden');
+            if(view === 'records') openTeacherRecords();
+            else if(view === 'flights') openTeacherFlights(true);
+            else showTeacherHome();
         }
 
         async function sendTeacherPasswordReset() {
@@ -986,12 +1003,7 @@
 
             teacherAuthenticated = true;
             closeTeacherLogin();
-            document.getElementById('portal-view').classList.add('hidden');
-            document.getElementById('module-linear-search').classList.add('hidden');
-            document.getElementById('mind-games-view').classList.add('hidden');
-            document.getElementById('teacher-dashboard').classList.remove('hidden');
-            document.getElementById('nav-breadcrumb').innerText = "Dashboard Guru";
-            showTeacherHome();
+            restoreTeacherDashboard('home');
         }
 
         function closeTeacherLogin() {
@@ -1001,11 +1013,13 @@
         function closeTeacherAdmin() {
             document.getElementById('teacher-dashboard').classList.add('hidden');
             teacherAuthenticated = false;
+            sessionStorage.removeItem(TEACHER_DASHBOARD_VIEW_KEY);
             supabaseClient.auth.signOut();
             goToPortal();
         }
 
         function showTeacherHome() {
+            sessionStorage.setItem(TEACHER_DASHBOARD_VIEW_KEY, 'home');
             document.getElementById('teacher-home-view').classList.remove('hidden');
             document.getElementById('teacher-records-view').classList.add('hidden');
             document.getElementById('teacher-flights-view').classList.add('hidden');
@@ -1013,6 +1027,7 @@
         }
 
         async function openTeacherRecords() {
+            sessionStorage.setItem(TEACHER_DASHBOARD_VIEW_KEY, 'records');
             document.getElementById('teacher-home-view').classList.add('hidden');
             document.getElementById('teacher-flights-view').classList.add('hidden');
             document.getElementById('teacher-records-view').classList.remove('hidden');
@@ -1471,13 +1486,15 @@
             box.classList.remove('hidden');
         }
 
-        async function openTeacherFlights() {
+        async function openTeacherFlights(restoreSavedTab = false) {
+            sessionStorage.setItem(TEACHER_DASHBOARD_VIEW_KEY, 'flights');
             document.getElementById('teacher-home-view').classList.add('hidden');
             document.getElementById('teacher-records-view').classList.add('hidden');
             document.getElementById('teacher-flights-view').classList.remove('hidden');
             document.getElementById('nav-breadcrumb').innerText = "Penjejak Harga Tiket";
             resetFlightForm();
-            setFlightTab('form');
+            const savedTab = restoreSavedTab ? sessionStorage.getItem(TEACHER_FLIGHT_TAB_KEY) : 'form';
+            setFlightTab(['form', 'chart', 'list'].includes(savedTab) ? savedTab : 'form');
             await loadFlights();
         }
 
@@ -1491,6 +1508,7 @@
         }
 
         function setFlightTab(tab) {
+            sessionStorage.setItem(TEACHER_FLIGHT_TAB_KEY, tab);
             document.getElementById('flight-form').classList.toggle('hidden', tab !== 'form');
             document.getElementById('flight-chart-panel').classList.toggle('hidden', tab !== 'chart');
             document.getElementById('flight-list-panel').classList.toggle('hidden', tab !== 'list');
@@ -2358,7 +2376,18 @@
             else if(!document.getElementById('student-modal').classList.contains('hidden')) closeStudentModal();
         });
 
-        supabaseClient.auth.onAuthStateChange(event => {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if(event === 'INITIAL_SESSION') {
+                teacherAuthenticated = session?.user?.id === TEACHER_UID;
+                const savedView = sessionStorage.getItem(TEACHER_DASHBOARD_VIEW_KEY);
+                if(!teacherAuthenticated) {
+                    sessionStorage.removeItem(TEACHER_DASHBOARD_VIEW_KEY);
+                } else if(['home', 'records', 'flights'].includes(savedView)) {
+                    window.setTimeout(() => restoreTeacherDashboard(savedView), 0);
+                }
+            } else if(event === 'SIGNED_OUT') {
+                teacherAuthenticated = false;
+            }
             if(event === 'PASSWORD_RECOVERY') {
                 document.getElementById('teacher-login-modal').classList.add('hidden');
                 document.getElementById('teacher-password-reset-error').classList.add('hidden');
