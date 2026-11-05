@@ -409,11 +409,19 @@
                         <label class="block text-sm font-medium text-slate-700">Laluan &amp; tarikh perjalanan
                             <select id="fl-route-filter" onchange="renderFlightChart()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
                         </label>
+                        <label class="block text-sm font-medium text-slate-700">Mata wang graf
+                            <select id="fl-chart-currency" onchange="handleChartCurrencyChange()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                <option value="original">Mata wang asal</option>
+                                <option value="MYR">MYR — Ringgit Malaysia</option>
+                                <option value="NZD">NZD — Dolar New Zealand</option>
+                            </select>
+                        </label>
+                        <p id="flight-chart-rate-status" class="hidden rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-800" role="status" aria-live="polite"></p>
                         <div id="flight-chart-legend" class="flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Syarikat penerbangan dalam graf"></div>
                         <div class="relative h-72 sm:h-96"><canvas id="flight-chart" aria-label="Graf perubahan harga tiket mengikut tarikh"></canvas></div>
                         <p id="flight-chart-empty" class="hidden text-center text-sm text-slate-500">Belum ada data. Isi data dahulu di tab Isi Data.</p>
                         <p id="flight-chart-currency-note" class="hidden rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Data pada graf menggunakan mata wang berbeza dan tidak ditukar; jangan bandingkan nilai secara terus.</p>
-                        <p class="text-xs text-slate-500">Setiap garisan ialah satu syarikat penerbangan. Sentuh atau klik satu titik untuk lihat butiran.</p>
+                        <p class="text-xs text-slate-500">Kadar tukaran daripada <a href="https://exchangerate.fun/" target="_blank" rel="noopener noreferrer" class="underline">ExchangeRate.fun</a> (dikemas kini setiap jam); nilai ialah anggaran dan kadar bank/kad mungkin berbeza. Setiap garisan ialah satu syarikat penerbangan. Sentuh atau klik satu titik untuk lihat butiran.</p>
                     </div>
                     <div id="flight-detail" class="hidden bg-white border-2 border-indigo-400 rounded-2xl p-4 sm:p-5 space-y-1 text-sm text-slate-700" aria-live="polite"></div>
                 </div>
@@ -1141,6 +1149,8 @@
 
         let flightRows = [];
         let flightChart = null;
+        let chartRateSnapshot = null;
+        let chartRateRequestId = 0;
         let editingFlightId = null;
         const flightColors = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#a855f7', '#84cc16', '#ec4899', '#f97316', '#14b8a6'];
         const flightAirports = {
@@ -1667,7 +1677,7 @@
             });
         }
 
-        function showFlightDetail(row) {
+        function showFlightDetail(row, convertedCurrency = '') {
             const box = document.getElementById('flight-detail');
             box.innerHTML = '';
             const details = getFlightDetails(row);
@@ -1679,6 +1689,7 @@
             box.appendChild(airlineLine);
             const lines = [
                 ['Harga', fmtPrice(row)],
+                ...(convertedCurrency && chartRateSnapshot ? [['Anggaran dalam ' + convertedCurrency, formatConvertedPrice(row, convertedCurrency)]] : []),
                 ['Disemak pada', fmtDate(row.checked_on)],
                 ['Laluan', `${formatAirport(row.origin)} ⇄ ${formatAirport(row.destination)}`],
                 ['Tarikh pergi / balik', `${fmtDate(row.depart_date)} / ${fmtDate(row.return_date)}`]
@@ -1718,6 +1729,59 @@
             box.classList.remove('hidden');
         }
 
+        function formatConvertedPrice(row, targetCurrency) {
+            const sourceCurrency = String(row.currency || '').toUpperCase();
+            const sourceRate = sourceCurrency === 'SGD' ? 1 : Number(chartRateSnapshot?.rates[sourceCurrency]);
+            const targetRate = Number(chartRateSnapshot?.rates[targetCurrency]);
+            const converted = Number(row.price) / sourceRate * targetRate;
+            return new Intl.NumberFormat('ms-MY', {
+                style: 'currency',
+                currency: targetCurrency,
+                maximumFractionDigits: 2
+            }).format(converted);
+        }
+
+        async function handleChartCurrencyChange() {
+            const targetCurrency = document.getElementById('fl-chart-currency').value;
+            const requestId = ++chartRateRequestId;
+            const status = document.getElementById('flight-chart-rate-status');
+            chartRateSnapshot = null;
+            if(targetCurrency === 'original') {
+                status.classList.add('hidden');
+                renderFlightChart();
+                return;
+            }
+
+            status.classList.remove('hidden');
+            status.classList.remove('bg-rose-50', 'text-rose-800');
+            status.classList.add('bg-indigo-50', 'text-indigo-800');
+            status.setAttribute('role', 'status');
+            status.textContent = 'Mengambil kadar tukaran terkini...';
+            renderFlightChart();
+            try {
+                const response = await fetch('https://api.exchangerate.fun/latest?base=SGD', { cache: 'no-store' });
+                if(!response.ok) throw new Error(`Perkhidmatan kadar tukaran memberi ralat HTTP ${response.status}.`);
+                const data = await response.json();
+                if(data.base !== 'SGD' || !Number.isFinite(Number(data.timestamp)) || !data.rates || typeof data.rates !== 'object') {
+                    throw new Error('Format kadar tukaran yang diterima tidak sah.');
+                }
+                if(!Number.isFinite(Number(data.rates[targetCurrency])) || Number(data.rates[targetCurrency]) <= 0) {
+                    throw new Error(`Kadar ${targetCurrency} tidak tersedia.`);
+                }
+                if(requestId !== chartRateRequestId) return;
+                chartRateSnapshot = { rates: data.rates, timestamp: Number(data.timestamp) };
+                renderFlightChart();
+            } catch(error) {
+                if(requestId !== chartRateRequestId) return;
+                chartRateSnapshot = null;
+                status.classList.remove('bg-indigo-50', 'text-indigo-800');
+                status.classList.add('bg-rose-50', 'text-rose-800');
+                status.setAttribute('role', 'alert');
+                status.textContent = `Kadar tukaran tidak dapat dimuat. Graf tidak ditukar: ${error.message}`;
+                renderFlightChart();
+            }
+        }
+
         function renderFlightChart() {
             const canvas = document.getElementById('flight-chart');
             const empty = document.getElementById('flight-chart-empty');
@@ -1725,29 +1789,64 @@
             const rows = flightRows.filter(r => routeKey(r) === key);
             const legend = document.getElementById('flight-chart-legend');
             const currencyNote = document.getElementById('flight-chart-currency-note');
+            const status = document.getElementById('flight-chart-rate-status');
+            const targetCurrency = document.getElementById('fl-chart-currency').value;
             legend.replaceChildren();
             document.getElementById('flight-detail').classList.add('hidden');
             if(flightChart) { flightChart.destroy(); flightChart = null; }
             empty.classList.toggle('hidden', rows.length > 0);
             canvas.classList.toggle('hidden', rows.length === 0);
+            currencyNote.classList.toggle('hidden', targetCurrency !== 'original' || new Set(rows.map(row => row.currency)).size < 2);
             if(rows.length === 0) {
-                currencyNote.classList.add('hidden');
+                return;
+            }
+            if(targetCurrency !== 'original' && !chartRateSnapshot) {
+                canvas.classList.add('hidden');
                 return;
             }
             const dates = [...new Set(rows.map(r => r.checked_on))].sort();
             const airlines = [...new Set(rows.map(r => normalizeAirlineName(r.airline)))];
             airlines.forEach(airline => legend.appendChild(createAirlineDisplay(airline)));
             const currencies = [...new Set(rows.map(row => row.currency))];
-            currencyNote.classList.toggle('hidden', currencies.length < 2);
             if(!window.Chart) return;
             const cell = {};
             rows.forEach(r => { cell[`${normalizeAirlineName(r.airline)}|${r.checked_on}`] = r; });
+            let excludedRows = 0;
+            const chartValue = row => {
+                if(targetCurrency === 'original') return Number(row.price);
+                const sourceCurrency = String(row.currency || '').toUpperCase();
+                const sourceRate = sourceCurrency === 'SGD' ? 1 : Number(chartRateSnapshot.rates[sourceCurrency]);
+                const targetRate = Number(chartRateSnapshot.rates[targetCurrency]);
+                if(!Number.isFinite(sourceRate) || sourceRate <= 0) {
+                    excludedRows += 1;
+                    return null;
+                }
+                return Number(row.price) / sourceRate * targetRate;
+            };
+            const values = new Map(rows.map(row => [`${normalizeAirlineName(row.airline)}|${row.checked_on}`, chartValue(row)]));
+            const availableValues = [...values.values()].filter(value => value !== null);
+            if(targetCurrency !== 'original') {
+                const rateDate = new Date(chartRateSnapshot.timestamp * 1000).toLocaleString('ms-MY');
+                status.classList.remove('hidden', 'bg-rose-50', 'text-rose-800');
+                status.classList.add('bg-indigo-50', 'text-indigo-800');
+                status.setAttribute('role', 'status');
+                status.textContent = `Kadar indikatif ExchangeRate.fun (${rateDate}): 1 SGD = ${Number(chartRateSnapshot.rates[targetCurrency]).toFixed(4)} ${targetCurrency}.` +
+                    (excludedRows ? ` ${excludedRows} rekod tidak dipaparkan kerana mata wang asalnya tidak disokong.` : '');
+                if(availableValues.length === 0) {
+                    canvas.classList.add('hidden');
+                    status.classList.remove('bg-indigo-50', 'text-indigo-800');
+                    status.classList.add('bg-rose-50', 'text-rose-800');
+                    status.setAttribute('role', 'alert');
+                    status.textContent = 'Tiada rekod boleh ditukar kerana mata wang asal tidak disokong oleh perkhidmatan kadar tukaran.';
+                    return;
+                }
+            }
             const dark = document.body.classList.contains('theme-dark');
             const textColor = dark ? '#e2e8f0' : '#1e293b';
             const gridColor = dark ? 'rgba(148,163,184,.25)' : 'rgba(30,41,59,.15)';
             const datasets = airlines.map((airline, i) => ({
                 label: airline,
-                data: dates.map(d => cell[`${airline}|${d}`] ? Number(cell[`${airline}|${d}`].price) : null),
+                data: dates.map(d => values.get(`${airline}|${d}`) ?? null),
                 borderColor: getAirlineBrand(airline)?.color || flightColors[i % flightColors.length],
                 backgroundColor: getAirlineBrand(airline)?.color || flightColors[i % flightColors.length],
                 spanGaps: true,
@@ -1766,7 +1865,7 @@
                         if(!elements.length) return;
                         const { datasetIndex, index } = elements[0];
                         const row = cell[`${airlines[datasetIndex]}|${dates[index]}`];
-                        if(row) showFlightDetail(row);
+                        if(row) showFlightDetail(row, targetCurrency === 'original' ? '' : targetCurrency);
                     },
                     plugins: {
                         legend: { display: false },
@@ -1775,14 +1874,26 @@
                             callbacks: {
                                 label: context => {
                                     const row = cell[`${airlines[context.datasetIndex]}|${dates[context.dataIndex]}`];
-                                    return row ? `${row.airline}: ${fmtPrice(row)}` : context.dataset.label;
+                                    if(!row) return context.dataset.label;
+                                    return targetCurrency === 'original'
+                                        ? `${row.airline}: ${fmtPrice(row)}`
+                                        : `${row.airline}: ${formatConvertedPrice(row, targetCurrency)} (asal ${fmtPrice(row)})`;
                                 }
                             }
                         }
                     },
                     scales: {
                         x: { ticks: { color: textColor }, grid: { color: gridColor }, title: { display: true, text: 'Tarikh semak harga', color: textColor } },
-                        y: { ticks: { color: textColor }, grid: { color: gridColor }, title: { display: true, text: currencies.length === 1 ? `Harga (${currencies[0]})` : 'Harga (mata wang asal)', color: textColor } }
+                        y: {
+                            ticks: {
+                                color: textColor,
+                                callback: value => targetCurrency === 'original'
+                                    ? Number(value).toLocaleString('ms-MY')
+                                    : new Intl.NumberFormat('ms-MY', { style: 'currency', currency: targetCurrency, maximumFractionDigits: 0 }).format(value)
+                            },
+                            grid: { color: gridColor },
+                            title: { display: true, text: targetCurrency !== 'original' ? `Harga (${targetCurrency})` : currencies.length === 1 ? `Harga (${currencies[0]})` : 'Harga (mata wang asal)', color: textColor }
+                        }
                     }
                 }
             });
