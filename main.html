@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="ms-MY">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,19 +8,50 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Press+Start+2P&family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Poppins', sans-serif; transition: background-color .2s ease, color .2s ease; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color .2s ease, color .2s ease; }
         .jawi-text { font-family: 'Noto Naskh Arabic', 'Amiri', serif; direction: rtl; font-size: 1.6rem; line-height: 1.9; }
-        :focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+        :focus-visible { outline: 3px solid #7968dc; outline-offset: 2px; }
         button:not(:disabled), summary, select { cursor: pointer; }
         button:disabled { cursor: not-allowed; opacity: .75; }
         .touch-target { min-height: 44px; }
         button:not(:disabled) { transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; }
         @media (hover: hover) {
-            button:not(:disabled):hover { transform: translateY(-1px); }
+            button:not(:disabled):hover { transform: translateY(-2px); filter: brightness(1.04); box-shadow: 0 7px 18px rgba(15,23,42,.14); }
         }
         button:not(:disabled):active { transform: scale(.97); }
+        .flight-tab { position: relative; overflow: hidden; transition: background-color .22s ease, color .22s ease, border-color .22s ease, transform .22s ease, box-shadow .22s ease; }
+        .flight-tab[aria-selected="true"] { box-shadow: 0 8px 18px rgba(79,70,229,.18); transform: translateY(-1px); }
+        .flight-panel-enter { animation: flight-panel-enter .38s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes flight-panel-enter {
+            from { opacity: 0; transform: translateY(12px) scale(.995); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .flight-panel-enter { animation: none !important; }
+        }
+        :root {
+            --page-bg: #120e16;
+            --surface: #221a2c;
+            --surface-raised: #2a1f38;
+            --surface-tint: #2a1f38;
+            --ink: #f5f2fa;
+            --muted: #c4b5d8;
+            --accent: #fbbf24;
+            --accent-bright: #a78bfa;
+            --accent-soft: #38264d;
+            --arcade-gold: #fbbf24;
+            --arcade-coral: #f43f5e;
+            --line: #573b70;
+        }
+        body {
+            background: var(--page-bg) !important;
+            color: var(--ink);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
         #nav-breadcrumb {
             border: 1px solid rgba(255,255,255,.28);
             background: linear-gradient(135deg, rgba(255,255,255,.2), rgba(15,23,42,.16));
@@ -52,53 +83,30 @@
             vertical-align: middle;
         }
         .airline-legend-item { display: inline-flex; align-items: center; gap: .45rem; }
-        .flight-aircraft-icon { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; color: #4f46e5; }
+        .flight-aircraft-icon { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; color: #a78bfa; }
         .flight-aircraft-display { display: inline-flex; align-items: center; gap: .35rem; font-weight: 500; }
-        body.theme-dark .flight-aircraft-icon { color: #a5b4fc; }
+        .game-icon {
+            display: inline-flex;
+            width: 2.5rem;
+            height: 2.5rem;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(196,181,253,.32);
+            border-radius: .8rem;
+            background: #38264d;
+            color: #fbbf24;
+            box-shadow: inset 0 0 14px rgba(167,139,250,.16);
+            font-weight: 800;
+        }
+        .game-icon-jawi { font: 700 1.8rem/1 'Noto Naskh Arabic', serif; color: #f0abfc; }
+        .game-icon-malaysia { background: linear-gradient(145deg,#8f2945,#38264d); color: #fff; font: 800 .85rem/1 'Space Mono',monospace; }
         #toast-box { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; gap: .5rem; width: min(92vw, 26rem); pointer-events: none; }
-        .toast { pointer-events: auto; padding: .75rem 1rem; border-radius: .75rem; font-size: .875rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.25); background: #0f172a; color: #fff; }
-        .toast.error { background: #9f1239; }
-        .toast.ok { background: #047857; }
+        .toast { pointer-events: auto; padding: .75rem 1rem; border-radius: .75rem; font-size: .875rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.25); background: #342249; color: #fff; }
+        .toast.error { background: #8f2945; }
+        .toast.ok { background: #087c5a; }
         details.category-group > summary { list-style: none; }
         details.category-group > summary::-webkit-details-marker { display: none; }
         details.category-group[open] > summary .category-chevron { transform: rotate(180deg); }
-        body:not(.theme-dark) { background-color: #c3d0e0 !important; }
-        body:not(.theme-dark) .bg-slate-50 { background-color: #e7edf5; }
-        body:not(.theme-dark) .border-slate-200 { border-color: #aebcd0; }
-        body.theme-dark { color-scheme: dark; background-color: #0a101c !important; color: #f1f5f9; }
-        body.theme-dark .bg-slate-50, body.theme-dark .bg-slate-50\/50 { background-color: #17263b !important; }
-        body.theme-dark .bg-white { background-color: #1f3049 !important; }
-        body.theme-dark .bg-indigo-600, body.theme-dark .bg-indigo-700 { background-color: #818cf8 !important; color: #0b1220 !important; }
-        body.theme-dark .hover\:bg-indigo-700:hover { background-color: #a5b4fc !important; }
-        body.theme-dark header.sticky { background-color: #1e2a55 !important; color: #fff !important; }
-        body.theme-dark header.sticky .bg-indigo-700, body.theme-dark header.sticky .bg-indigo-800 { background-color: #3b4a8a !important; color: #fff !important; }
-        body.theme-dark .bg-emerald-700 { background-color: #34d399 !important; color: #052e24 !important; }
-        body.theme-dark button.bg-slate-900 { background-color: #e2e8f0 !important; color: #0f172a !important; }
-        body.theme-dark .bg-indigo-100 { background-color: #3a3f8f !important; }
-        body.theme-dark .bg-amber-100 { background-color: #5b4513 !important; }
-        body.theme-dark .bg-rose-100 { background-color: #5c2535 !important; }
-        body.theme-dark .bg-amber-50 { background-color: #3d3110 !important; }
-        body.theme-dark .text-indigo-600, body.theme-dark .text-indigo-700, body.theme-dark .text-indigo-800 { color: #c7d2fe !important; }
-        body.theme-dark .text-emerald-700, body.theme-dark .text-emerald-800 { color: #6ee7b7 !important; }
-        body.theme-dark .text-rose-600, body.theme-dark .text-rose-700, body.theme-dark .text-rose-800 { color: #fda4af !important; }
-        body.theme-dark .text-amber-700, body.theme-dark .text-amber-800 { color: #fcd34d !important; }
-        body.theme-dark .hover\:bg-indigo-50:hover { background-color: #2f4170 !important; }
-        body.theme-dark .hover\:bg-slate-200:hover, body.theme-dark .hover\:bg-slate-50:hover { background-color: #3a4d69 !important; }
-        body.theme-dark .hover\:text-indigo-600:hover { color: #e0e7ff !important; }
-        body.theme-dark .text-white { color: #fff; }
-        body.theme-dark .hover\:border-indigo-400:hover, body.theme-dark .hover\:border-emerald-400:hover, body.theme-dark .hover\:border-amber-400:hover { border-color: #a5b4fc !important; }
-        body.theme-dark .bg-slate-100 { background-color: #29384b !important; }
-        body.theme-dark .bg-slate-200 { background-color: #34445a !important; }
-        body.theme-dark .text-slate-900, body.theme-dark .text-slate-800 { color: #f1f5f9 !important; }
-        body.theme-dark .text-slate-700, body.theme-dark .text-slate-600 { color: #cbd5e1 !important; }
-        body.theme-dark .text-slate-500, body.theme-dark .text-slate-400 { color: #a9b8ca !important; }
-        body.theme-dark .border-slate-100, body.theme-dark .border-slate-200, body.theme-dark .border-slate-300 { border-color: #3a4a60 !important; }
-        body.theme-dark .divide-slate-100 > :not(:last-child) { border-color: #3a4a60 !important; }
-        body.theme-dark input, body.theme-dark select { background-color: #172335; color: #f1f5f9; border-color: #52647c; }
-        body.theme-dark .bg-indigo-50 { background-color: #24324e !important; }
-        body.theme-dark .bg-emerald-50 { background-color: #173b36 !important; }
-        body.theme-dark .bg-rose-50 { background-color: #452a35 !important; }
-        body.theme-dark .home-hero { background-color: #101827; }
         .home-hero { min-height: 22rem; }
         .reveal { transition: opacity .5s ease, transform .5s ease; }
         .motion-ready .reveal { opacity: 0; transform: translateY(14px); }
@@ -108,6 +116,481 @@
             .portal-choice:hover { transform: translateY(-4px); }
         }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+        :root {
+            --page-bg: #120e16;
+            --surface: #221a2c;
+            --surface-raised: #2a1f38;
+            --surface-tint: #2a1f38;
+            --ink: #f5f2fa;
+            --muted: #c4b5d8;
+            --accent: #fbbf24;
+            --accent-bright: #a78bfa;
+            --accent-soft: #38264d;
+            --arcade-gold: #fbbf24;
+            --arcade-coral: #f43f5e;
+            --line: #573b70;
+            color-scheme: dark;
+        }
+        html { background: var(--page-bg); scroll-behavior: smooth; }
+        body {
+            overflow-x: hidden;
+            background: var(--page-bg) !important;
+            color: var(--ink);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background-color .25s ease, color .25s ease;
+        }
+        h1, h2, h3, h4 { font-family: 'Syne', 'Plus Jakarta Sans', sans-serif; letter-spacing: -.025em; }
+        .font-pixel { font-family: 'Press Start 2P', monospace; font-size: .48rem !important; line-height: 1.65; letter-spacing: .025em; }
+        .font-display { font-family: 'Syne', sans-serif; }
+        .font-mono-arcade { font-family: 'Space Mono', monospace; }
+        .font-body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body > header.sticky {
+            background: rgba(24,14,34,.96) !important;
+            color: #f5f2fa !important;
+            border-bottom: 1px solid rgba(167,139,250,.28);
+            box-shadow: 0 8px 26px rgba(8,5,14,.32);
+            backdrop-filter: blur(16px);
+        }
+        body > header.sticky > div { max-width: 88rem; }
+        body > header.sticky h1 { font-family: 'Syne', sans-serif; letter-spacing: -.03em; }
+        body > header.sticky button[onclick="openTeacherAdmin()"] {
+            background: #fbbf24 !important;
+            color: #120e16 !important;
+            border-radius: .8rem;
+            box-shadow: 0 5px 18px rgba(251,191,36,.22);
+        }
+        #nav-breadcrumb {
+            min-width: 12rem;
+            border: 1px solid rgba(167,139,250,.35);
+            background: #221a2c;
+            color: #d8c8f2;
+            box-shadow: none;
+            font: 700 .64rem/1.35 'Space Mono', monospace;
+            letter-spacing: .025em;
+        }
+        #nav-breadcrumb::before { color: var(--arcade-gold); }
+        main.max-w-7xl { max-width: 88rem; padding-top: clamp(1.25rem, 3vw, 2.75rem); padding-bottom: 4rem; }
+        body .bg-slate-50, body .bg-slate-50\/50 { background-color: #1b1423 !important; }
+        body .bg-white { background-color: var(--surface) !important; }
+        body .bg-slate-100 { background-color: var(--surface-tint) !important; }
+        body .bg-slate-200 { background-color: #3a2c49 !important; }
+        body .border-slate-100, body .border-slate-200, body .border-slate-300 { border-color: var(--line) !important; }
+        body .divide-slate-100 > :not(:last-child) { border-color: var(--line) !important; }
+        body .text-slate-900, body .text-slate-800 { color: #f5f2fa !important; }
+        body .text-slate-700, body .text-slate-600 { color: #ded3ef !important; }
+        body .text-slate-500, body .text-slate-400 { color: #b7a4d0 !important; }
+        body .bg-indigo-600, body .bg-indigo-700 {
+            background-color: var(--accent) !important;
+            color: #120e16 !important;
+        }
+        body .hover\:bg-indigo-700:hover { background-color: #fcd34d !important; }
+        body .text-indigo-600, body .text-indigo-700, body .text-indigo-800 { color: #c4b5fd !important; }
+        body .bg-indigo-100, body .bg-indigo-50 { background-color: #38264d !important; }
+        body .bg-emerald-400 { background-color: #34d399 !important; color: #10251c !important; }
+        body .hover\:bg-emerald-300:hover { background-color: #6ee7b7 !important; }
+        body .bg-emerald-50 { background-color: #183b35 !important; }
+        body .text-emerald-700, body .text-emerald-800 { color: #7ee8bd !important; }
+        body .bg-emerald-700 { background-color: #10b981 !important; color: #071811 !important; }
+        body .bg-amber-50 { background-color: #362916 !important; }
+        body .bg-amber-100 { background-color: #493515 !important; }
+        body .text-amber-700, body .text-amber-800 { color: #fcd34d !important; }
+        body .bg-rose-50 { background-color: #3b202b !important; }
+        body .bg-rose-100 { background-color: #49232f !important; }
+        body .text-rose-600, body .text-rose-700, body .text-rose-800 { color: #ff8296 !important; }
+        body input, body select, body textarea {
+            color: #f5f2fa;
+            background-color: #1b1423;
+            border-color: #664982;
+        }
+        body input:focus, body select:focus, body textarea:focus {
+            border-color: var(--accent-bright);
+            --tw-ring-color: rgba(167,139,250,.45);
+        }
+        body > header.sticky #nav-breadcrumb { background: #221a2c; color: #d8c8f2; border-color: #573b70; }
+        .home-hero {
+            min-height: clamp(28rem, 58vh, 43rem);
+            border: 1px solid rgba(124,58,237,.45);
+            border-radius: 1.5rem;
+            background: radial-gradient(circle at 8% 10%, #30203d 0%, #221a2c 62%, #181123 100%);
+            box-shadow: 0 24px 64px rgba(5,3,10,.5), inset 0 0 45px rgba(124,58,237,.08);
+        }
+        .home-hero > img { display: none; }
+        .home-hero > div:last-child { width: 100%; max-width: 88rem; margin: 0; padding: clamp(1.5rem, 4vw, 3rem); text-align: left; }
+        .home-hero > div:last-child > p:first-child {
+            display: inline-flex;
+            padding: .5rem .75rem;
+            border: 1px solid rgba(251,191,36,.3);
+            border-radius: 999px;
+            background: #120e16;
+            color: #fbbf24;
+            font: 700 .64rem/1.5 'Space Mono', monospace;
+            letter-spacing: .08em;
+        }
+        .home-hero h2 { font-family: 'Press Start 2P', monospace; font-size: clamp(1.15rem, 3.2vw, 2.55rem); line-height: 1.65; font-weight: 400; letter-spacing: -.025em; text-wrap: balance; }
+        .home-hero h2 span { color: #fbbf24; }
+        .home-hero > div:last-child > p:nth-of-type(2) { color: rgba(255,255,255,.9); }
+        .home-hero button { min-height: 3.1rem; border-radius: .85rem; }
+        .category-group {
+            padding: clamp(1rem, 2.8vw, 2rem);
+            border: 1px solid rgba(124,58,237,.3);
+            border-radius: 1.25rem;
+            background: linear-gradient(145deg, #261c31, #201828);
+            box-shadow: 0 9px 28px rgba(5,3,10,.28);
+        }
+        .category-group > summary { border-color: var(--line); padding-bottom: 1rem; }
+        .category-group > summary > span:first-child > span:last-child { font-family: 'Syne', sans-serif; }
+        .portal-choice {
+            min-height: 15rem;
+            padding: clamp(1.25rem, 2vw, 1.75rem);
+            border: 1px solid rgba(124,58,237,.32) !important;
+            border-radius: 1rem;
+            background: linear-gradient(145deg, #2a1f38, #221a2c);
+            box-shadow: 0 6px 20px rgba(5,3,10,.3);
+            transition: transform .24s cubic-bezier(.2,.8,.2,1), box-shadow .24s ease, border-color .24s ease;
+        }
+        .portal-choice > span:first-child:not(.text-2xl) {
+            background: #38264d;
+            color: #d8c8f2;
+        }
+        .portal-choice h3, .portal-choice h4 { font-family: 'Syne', sans-serif; }
+        @media (hover: hover) {
+            .portal-choice:hover {
+                transform: translateY(-4px);
+                border-color: var(--accent-bright) !important;
+                box-shadow: 0 15px 34px rgba(5,3,10,.42), 0 0 22px rgba(167,139,250,.12);
+            }
+            .category-group > summary:hover .category-chevron { transform: translateY(3px); }
+        }
+        .teacher-dashboard, #teacher-dashboard > header, #teacher-records-view > div, #teacher-flights-view > div,
+        #flight-form, #flight-chart-panel > div, #flight-list-panel, #flight-detail { border-radius: 1rem; }
+        #teacher-dashboard > header { border-color: var(--line); }
+        #flight-form, #flight-chart-panel > div, #flight-list-panel, #flight-detail,
+        #teacher-dashboard .bg-white { background-color: var(--surface); }
+        .flight-tab { font-family: 'Space Mono', monospace; font-size: .72rem; }
+        .flight-tab[aria-selected="true"] { background: #38264d !important; border-color: #a78bfa !important; color: #e9ddff !important; box-shadow: 0 5px 14px rgba(5,3,10,.3), 0 0 16px rgba(167,139,250,.14); }
+        .currency-chip {
+            min-height: 2.2rem;
+            padding: .48rem .85rem;
+            border: 1px solid var(--line);
+            border-radius: .7rem;
+            background: #221a2c;
+            color: #e8def5;
+            font: 700 .7rem/1 'Space Mono', monospace;
+            transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+        }
+        .currency-chip[aria-pressed="true"] {
+            color: #120e16;
+            background: #fbbf24;
+            border-color: #fbbf24;
+            box-shadow: 0 5px 18px rgba(251,191,36,.25);
+        }
+        @media (hover: hover) {
+            .currency-chip:not([aria-pressed="true"]):hover { border-color: #a78bfa; color: #e9ddff; background: #38264d; transform: translateY(-2px); }
+        }
+        #flight-chart-currency-options { align-items: center; }
+        .airline-logo { border-color: var(--line); border-radius: .55rem; }
+        .flight-aircraft-icon { color: #6959bf; }
+        #toast-box .toast { background: #453b65; color: #fff; box-shadow: 0 8px 26px rgba(42,32,70,.24); }
+        #toast-box .toast.error { background: #873e51; }
+        #toast-box .toast.ok { background: #426d53; }
+        button:not(:disabled) { transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; }
+        @media (hover: hover) {
+            button:not(:disabled):hover { box-shadow: 0 7px 18px rgba(76,60,130,.16); }
+        }
+        .reveal { transition: opacity .5s ease, transform .5s ease; }
+        .motion-ready .reveal { opacity: 0; transform: translateY(14px); }
+        .motion-ready .reveal.is-visible { opacity: 1; transform: translateY(0); }
+        ::selection { background: #f43f5e; color: #fff; }
+        ::-webkit-scrollbar { width: 9px; height: 9px; }
+        ::-webkit-scrollbar-track { background: #120e16; }
+        ::-webkit-scrollbar-thumb { background: #513769; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a78bfa; }
+        #portal-view {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            align-items: start;
+            gap: clamp(1rem, 2.2vw, 1.75rem);
+        }
+        #portal-view > .home-hero, #other-category { grid-column: 1 / -1; }
+        #ask-category { grid-column: 1 / span 8; }
+        #games-category { grid-column: 9 / span 4; }
+        #ask-category > div > .grid, #games-category > div > .grid { grid-template-columns: minmax(0, 1fr); }
+        #portal-view > .category-group { width: auto; min-width: 0; justify-self: stretch; }
+        .category-group details:not(.category-group) { background: #1b1423; border-color: #513769; }
+        .category-group details:not(.category-group) > summary { color: #e8def5; }
+        .category-group .border-dashed { border-color: #674a81 !important; }
+        .category-group .opacity-75, #other-category { opacity: 1; }
+        .category-group .text-indigo-700, .category-group .text-indigo-600 { color: #c4b5fd !important; }
+        #teacher-dashboard > header { border-color: #573b70; }
+        #flight-form, #flight-chart-panel > div, #flight-list-panel, #flight-detail,
+        #teacher-dashboard .bg-white, #teacher-dashboard > header {
+            border-color: #573b70;
+            background: linear-gradient(145deg, #2a1f38, #221a2c);
+            color: #f5f2fa;
+        }
+        #flight-form fieldset { border-color: #674a81; background: rgba(18,14,22,.35); }
+        #flight-form legend { color: #e9ddff; }
+        #flight-table-body tr:hover { background: #302440; }
+        #flight-list-panel thead tr { background: #302440; color: #f5f2fa; }
+        .airline-logo { border-color: #8c789f; }
+        .flight-aircraft-icon { color: #c4b5fd; }
+        #flight-chart-rate-status { background: #38264d; color: #e9ddff; }
+        #flight-chart-rate-status.bg-rose-50 { background: #3b202b !important; color: #ff8296 !important; }
+        #flight-chart-panel a { color: #c4b5fd; }
+        #toast-box .toast { background: #342249; color: #fff; box-shadow: 0 8px 26px rgba(0,0,0,.35); }
+        #toast-box .toast.error { background: #8f2945; }
+        #toast-box .toast.ok { background: #087c5a; }
+        body .hover\:bg-slate-200:hover, body .hover\:bg-slate-50:hover { background-color: #49365c !important; }
+        body .hover\:border-indigo-400:hover, body .hover\:border-emerald-400:hover, body .hover\:border-amber-400:hover {
+            border-color: #c4b5fd !important;
+        }
+        body .text-slate-900, body .text-slate-800 { color: #f5f2fa !important; }
+        body .text-slate-700, body .text-slate-600, body .text-slate-500 { color: #c4b5d8 !important; }
+        body .text-slate-400 { color: #ad9cbe !important; }
+        body .text-indigo-700, body .text-indigo-600, body .text-indigo-500 { color: #c4b5fd !important; }
+        body .text-amber-400 { color: #fbbf24 !important; }
+        body .text-rose-400, body .text-rose-600 { color: #ff8296 !important; }
+        body .text-emerald-700, body .text-emerald-600 { color: #53d6a0 !important; }
+        body .bg-white, body .bg-slate-50, body .bg-slate-100 { background-color: #221a2c !important; }
+        body .bg-indigo-100, body .bg-purple-100 { background-color: #38264d !important; }
+        body .bg-slate-900 { background-color: #120e16 !important; }
+        body .border-slate-300, body .border-slate-100 { border-color: #573b70 !important; }
+        body .hover\:bg-indigo-700:hover { background-color: #d99f16 !important; }
+        body .hover\:bg-amber-300:hover { background-color: #ffd35a !important; }
+        body .hover\:text-indigo-600:hover { color: #fbbf24 !important; }
+        #portal-view.hidden { display: none !important; }
+        main.max-w-7xl { max-width: 88rem; padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1rem, 4vw, 3.5rem) 4rem; }
+        #portal-view { row-gap: clamp(1rem, 2.2vw, 1.75rem); }
+        .home-hero { position: relative; overflow: hidden; isolation: isolate; }
+        .home-hero::before {
+            content: "";
+            position: absolute;
+            z-index: 0;
+            inset: -35%;
+            pointer-events: none;
+            opacity: .2;
+            background: repeating-linear-gradient(0deg, transparent 0 42px, rgba(196,181,253,.12) 43px 44px),
+                        linear-gradient(115deg, transparent 34%, rgba(251,191,36,.12) 47%, transparent 59%);
+            background-size: auto, 240% 100%;
+            animation: arcade-scan 18s linear infinite;
+        }
+        .home-hero::after {
+            content: "";
+            position: absolute;
+            z-index: 0;
+            width: 15rem;
+            height: 15rem;
+            top: -5rem;
+            right: 6%;
+            border-radius: 50%;
+            background: rgba(167,139,250,.12);
+            filter: blur(48px);
+            pointer-events: none;
+            animation: arcade-float 7s ease-in-out infinite;
+        }
+        .home-hero > div:last-child { position: relative; z-index: 1; }
+        .home-hero aside > button, body .portal-choice, #teacher-home-view > div > button,
+        #teacher-home-view > div > div {
+            background: #120e16 !important;
+            border-color: #573b70 !important;
+        }
+        .home-hero aside > button:hover, body .portal-choice:hover, #teacher-home-view > div > button:hover {
+            border-color: #a78bfa !important;
+        }
+        .portal-choice { animation: arcade-card-glow 7s ease-in-out infinite alternate; }
+        #teacher-home-view > div > button { animation: arcade-card-glow 7s ease-in-out infinite alternate; }
+        #teacher-home-view > div > button:nth-child(2) { animation-delay: -3.5s; }
+        #teacher-dashboard > header > button {
+            background: #f43f5e !important;
+            color: #fff !important;
+            border: 1px solid #ff8296;
+            box-shadow: 0 5px 18px rgba(244,63,94,.22);
+        }
+        #teacher-dashboard > header > button:hover { background: #e11d48 !important; }
+        #teacher-dashboard > header > div > p:first-child { color: #c4b5fd !important; }
+        #teacher-dashboard > header > div > h2 span { color: #fbbf24; }
+        #teacher-home-view > div > button > span:last-child { color: #fbbf24 !important; }
+        .arcade-pulse { animation: arcade-pulse 2.4s ease-in-out infinite; }
+        .flight-tab[aria-selected="true"] { animation: arcade-card-glow 4.5s ease-in-out infinite alternate; }
+        .category-group > summary { color: #f5f2fa; }
+        .category-group > summary .category-chevron { color: #fbbf24; }
+        .category-group details:not(.category-group) { background: #120e16; }
+        .category-group details:not(.category-group) > div > div { background: #120e16 !important; border-color: #573b70 !important; }
+        #other-category > div { background: #120e16 !important; border-color: #573b70 !important; color: #d3c4f1 !important; }
+        #flight-form label { color: #e8def5; }
+        #flight-form input, #flight-form select, #flight-form textarea {
+            color: #f5f2fa;
+            border-color: #674a81;
+            background-color: #1b1423;
+        }
+        #flight-form input::placeholder { color: #ad9cbe; }
+        #flight-form option { color: #f5f2fa; background: #1b1423; }
+        #games-category > div > details > div { grid-template-columns: minmax(0, 1fr); }
+        #games-menu > button, .category-group details:not(.category-group) > div > button {
+            background: #120e16 !important;
+            border-color: #573b70 !important;
+        }
+        #games-menu > button:hover, .category-group details:not(.category-group) > div > button:hover {
+            border-color: #a78bfa !important;
+            background: #1b1423 !important;
+        }
+        #games-menu h3, .category-group details:not(.category-group) > div > button h4 { color: #f5f2fa !important; }
+        #games-menu p, .category-group details:not(.category-group) > div > button p { color: #c4b5d8 !important; }
+        #games-menu button > span:last-child, .category-group details:not(.category-group) > div > button > span:last-child { color: #fbbf24 !important; }
+        .game-level-button {
+            color: #f5f2fa !important;
+            background: #1b1423 !important;
+            border-color: #674a81 !important;
+        }
+        .game-level-button[data-game-level="low"] { --game-level-accent: #34d399; }
+        .game-level-button[data-game-level="medium"] { --game-level-accent: #a78bfa; }
+        .game-level-button[data-game-level="high"] { --game-level-accent: #fb7185; }
+        .game-level-button[aria-pressed="true"] {
+            color: var(--game-level-accent) !important;
+            background: #302440 !important;
+            border-color: var(--game-level-accent) !important;
+            box-shadow: 0 0 18px color-mix(in srgb, var(--game-level-accent) 24%, transparent);
+        }
+        #game-setup legend { color: #fbbf24 !important; font-size: .95rem; }
+        #game-setup-title { color: #fbbf24 !important; }
+        #game-setup-description, #game-setup-refs { color: #d3c4f1 !important; }
+        #game-setup-refs a { color: #f0abfc !important; }
+        #game-play > div:first-child { background: #1b1423 !important; border-color: #573b70 !important; }
+        #game-level-label, #game-score { color: #fbbf24 !important; }
+        #game-progress { color: #f0abfc; }
+        #game-question { color: #f5f2fa !important; }
+        #game-visual { background: #120e16 !important; border-color: #674a81 !important; }
+        .game-answer-button {
+            color: #f5f2fa !important;
+            background: #221a2c !important;
+            border-color: #674a81 !important;
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+        }
+        .game-answer-button:nth-child(4n + 1) { border-bottom-color: #a78bfa !important; }
+        .game-answer-button:nth-child(4n + 2) { border-bottom-color: #fbbf24 !important; }
+        .game-answer-button:nth-child(4n + 3) { border-bottom-color: #fb7185 !important; }
+        .game-answer-button:nth-child(4n) { border-bottom-color: #34d399 !important; }
+        .game-answer-button:hover:not(:disabled) { background: #38264d !important; border-color: #c4b5fd !important; }
+        .game-answer-button.is-correct { color: #a7f3d0 !important; background: #16392f !important; border-color: #34d399 !important; }
+        .game-answer-button.is-wrong { color: #fecdd3 !important; background: #49232f !important; border-color: #fb7185 !important; }
+        #game-feedback.text-emerald-700 { color: #53d6a0 !important; }
+        #game-feedback.text-rose-700 { color: #ff8296 !important; }
+        #game-source { color: #f0abfc !important; }
+        #game-result { background: #1b1423 !important; border-color: #674a81 !important; }
+        #game-result h3 { color: #fbbf24 !important; }
+        #game-final-score { color: #f0abfc !important; }
+        #game-result-message { color: #d3c4f1 !important; }
+        #module-linear-search > div:first-child { background: #221a2c !important; border-color: #573b70 !important; }
+        #module-linear-search button[onclick="goToPortal()"], #mind-games-view button[onclick="goToPortal()"],
+        #mind-games-view button[onclick="showGamesMenu()"], #teacher-flights-view button[onclick="showTeacherHome()"],
+        #teacher-records-view button[onclick="showTeacherHome()"] {
+            color: #f0abfc !important;
+        }
+        #module-linear-search .border-b button { color: #d3c4f1; }
+        #module-linear-search .border-b #tab-fasa1, #module-linear-search .border-b #tab-fasa2 { color: #f0abfc !important; }
+        #module-linear-search .border-b button.border-indigo-600 { color: #fbbf24 !important; border-color: #fbbf24 !important; }
+        #bank-fasa1, #bank-fasa2 { background: #120e16 !important; }
+        #slots-fasa1 > .drop-target, #slots-fasa2 .slot-box {
+            background: #1b1423 !important;
+            border-color: #674a81 !important;
+            color: #d3c4f1 !important;
+        }
+        #slots-fasa1 > .drop-target:has([data-text]), #slots-fasa2 .slot-box:has([data-text]) {
+            border-color: #a78bfa !important;
+            background: #221a2c !important;
+        }
+        #module-linear-search h3, #module-linear-search h2 { color: #f5f2fa !important; }
+        #module-linear-search code { color: #f0abfc !important; background: #38264d !important; }
+        #student-modal > div, #teacher-login-modal > form, #teacher-password-reset-modal > form,
+        #popup-modal > div[role="dialog"] {
+            color: #f5f2fa;
+            background: linear-gradient(145deg, #2a1f38, #1b1423) !important;
+            border: 1px solid #674a81;
+            box-shadow: 0 24px 80px rgba(5,3,10,.65), 0 0 30px rgba(167,139,250,.12);
+        }
+        #student-modal h3, #teacher-login-modal h3, #teacher-password-reset-modal h3, #popup-title { color: #fbbf24 !important; }
+        #student-modal label, #teacher-login-modal label, #teacher-password-reset-modal label { color: #e9ddff !important; }
+        #student-modal p, #teacher-login-modal p, #teacher-password-reset-modal p, #popup-desc { color: #d3c4f1 !important; }
+        #teacher-login-modal a, #teacher-login-modal button.text-indigo-600,
+        #teacher-password-reset-modal a { color: #f0abfc !important; }
+        #popup-modal { overflow: hidden; }
+        #popup-modal > div[role="dialog"] { position: relative; z-index: 1; animation: arcade-popup-enter .42s cubic-bezier(.18,.89,.32,1.28) both; }
+        #popup-icon { animation: arcade-icon-bounce .8s cubic-bezier(.18,.89,.32,1.28) both; }
+        #popup-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        #popup-confetti span {
+            position: absolute;
+            top: -1rem;
+            left: var(--confetti-left);
+            width: .55rem;
+            height: .85rem;
+            border-radius: 2px;
+            background: var(--confetti-color);
+            opacity: 0;
+            animation: arcade-confetti 2.5s ease-in var(--confetti-delay) both;
+        }
+        #popup-confetti span:nth-child(3n) { border-radius: 50%; width: .65rem; height: .65rem; }
+        .arcade-step {
+            border: 1px solid var(--step-accent) !important;
+            border-radius: .7rem;
+            background: var(--step-bg) !important;
+            color: var(--step-text) !important;
+        }
+        .arcade-step-chip {
+            display: inline-block;
+            max-width: 100%;
+            padding: .2rem .45rem;
+            border: 1px solid var(--step-accent);
+            border-radius: .45rem;
+            background: var(--step-bg);
+            color: var(--step-text) !important;
+        }
+        .answer-item-selected {
+            outline: 3px solid #fbbf24 !important;
+            outline-offset: 2px;
+            transform: translateY(-2px);
+        }
+        #slots-fasa1 > .drop-target, #slots-fasa2 .slot-box { cursor: pointer; }
+        @keyframes arcade-popup-enter {
+            from { opacity: 0; transform: translateY(18px) scale(.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes arcade-icon-bounce {
+            0% { transform: scale(.3) rotate(-18deg); }
+            70% { transform: scale(1.18) rotate(7deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+        @keyframes arcade-confetti {
+            0% { opacity: 0; transform: translate3d(0,-2vh,0) rotate(0); }
+            12% { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(var(--confetti-drift),110vh,0) rotate(760deg); }
+        }
+        @media (max-width: 960px) {
+            #games-menu { grid-template-columns: minmax(0,1fr); }
+            #games-category > div > details > div { grid-template-columns: minmax(0,1fr); }
+        }
+        @keyframes arcade-scan {
+            from { background-position: 0 0, 100% 0; }
+            to { background-position: 0 160px, -140% 0; }
+        }
+        @keyframes arcade-float {
+            0%, 100% { transform: translate3d(0,0,0); }
+            50% { transform: translate3d(-18px,16px,0); }
+        }
+        @keyframes arcade-card-glow {
+            from { box-shadow: 0 6px 20px rgba(5,3,10,.3); }
+            to { box-shadow: 0 9px 24px rgba(5,3,10,.42), 0 0 14px rgba(167,139,250,.09); }
+        }
+        @keyframes arcade-pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74,222,128,.34); }
+            50% { opacity: .72; box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+        }
+        @media (max-width: 800px) {
+            #ask-category, #games-category { grid-column: 1 / -1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
@@ -122,7 +605,6 @@
                 <button onclick="openTeacherAdmin()" class="shrink-0 text-[11px] sm:text-xs bg-indigo-700 hover:bg-indigo-800 text-white px-2.5 sm:px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 whitespace-nowrap">
                     📊 Panel Guru
                 </button>
-                <button id="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Tukar tema" title="Tukar tema" class="shrink-0 w-9 h-9 grid place-items-center rounded-lg border border-indigo-300/40 bg-indigo-700 hover:bg-indigo-800 transition text-lg">☾</button>
                 <div id="nav-breadcrumb" role="status" aria-live="polite" class="text-xs px-3 py-1.5 rounded-full hidden md:block">
                     Halaman Utama
                 </div>
@@ -155,7 +637,7 @@
                             <option value="3 Begonia">3 Begonia</option>
                             <option value="__other__">Lain-lain</option>
                         </select>
-                        <input type="text" id="input-class-other" placeholder="Taip nama kelas" class="hidden mt-2 w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="input-class-other" placeholder="Contoh: 4 MMU" class="hidden mt-2 w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-sm text-sm">
                         Mula Masuk Modul →
@@ -219,10 +701,10 @@
 
         <!-- DASHBOARD GURU -->
         <div id="teacher-dashboard" class="hidden space-y-6 sm:space-y-8">
-            <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-slate-200 pb-5">
+            <header class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-slate-200 p-5">
                 <div>
                     <p class="text-xs font-semibold uppercase text-indigo-700">RUANG PENGURUSAN</p>
-                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Dashboard Guru</h2>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Dashboard <span class="text-amber-400">Guru</span></h2>
                     <p class="text-sm text-slate-600 mt-1">Pilih rekod atau alat pengurusan yang diperlukan.</p>
                 </div>
                 <button type="button" onclick="closeTeacherAdmin()" class="shrink-0 bg-slate-900 hover:bg-slate-700 text-white font-semibold px-4 py-2.5 rounded-xl transition">Log Keluar</button>
@@ -233,13 +715,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button type="button" onclick="openTeacherRecords()" class="text-left bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-2xl p-5 transition">
                         <span class="text-2xl">📊</span>
-                        <h4 class="font-bold text-slate-900 mt-3">Rekod Pelajar · Modul 1</h4>
+                        <h4 class="font-bold text-slate-900 mt-3">Rekod Pelajar · <span class="text-amber-400">Modul 1</span></h4>
                         <p class="text-sm text-slate-600 mt-1">Semak markah, kemas kini atau eksport rekod.</p>
                         <span class="inline-block text-sm font-semibold text-indigo-700 mt-4">Buka rekod →</span>
                     </button>
                     <button type="button" onclick="openTeacherFlights()" class="text-left bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-2xl p-5 transition">
                         <span class="text-2xl">✈️</span>
-                        <h4 class="font-bold text-slate-900 mt-3">Penjejak Harga Tiket</h4>
+                        <h4 class="font-bold text-slate-900 mt-3">Penjejak Harga <span class="text-rose-400">Tiket</span></h4>
                         <p class="text-sm text-slate-600 mt-1">Catat harga penerbangan dan lihat graf naik turun harga.</p>
                         <span class="inline-block text-sm font-semibold text-indigo-700 mt-4">Buka penjejak →</span>
                     </button>
@@ -256,15 +738,16 @@
                     <button type="button" onclick="showTeacherHome()" class="text-sm text-indigo-700 font-semibold hover:underline">← Dashboard Guru</button>
                     <h3 class="text-xl font-bold text-slate-900 mt-2">✈️ Penjejak Harga Tiket</h3>
                 </div>
-                <div class="grid grid-cols-3 gap-2 max-w-xl" role="tablist">
-                    <button type="button" role="tab" data-flight-tab="form" onclick="setFlightTab('form')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2">📝 Isi Data</button>
+                <div class="grid grid-cols-3 gap-2 max-w-xl" role="tablist" aria-label="Paparan penjejak harga tiket">
                     <button type="button" role="tab" data-flight-tab="chart" onclick="setFlightTab('chart')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2">📈 Graf</button>
+                    <button type="button" role="tab" data-flight-tab="form" onclick="setFlightTab('form')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2">📝 Isi Data</button>
                     <button type="button" role="tab" data-flight-tab="list" onclick="setFlightTab('list')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2">📋 Senarai</button>
                 </div>
                 <p id="flight-error" class="hidden text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3" role="alert"></p>
 
                 <form id="flight-form" onsubmit="saveFlightPrice(event)" class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4">
                     <h4 id="flight-form-title" class="font-bold text-slate-900">Tambah harga baharu</h4>
+                    <p class="text-xs text-slate-500">Pilihan tersuai disimpan dalam pelayar ini dan akan tersedia semula; nilai dalam rekod turut dipulihkan apabila data dimuatkan.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <label class="block text-sm font-medium text-slate-700">Syarikat penerbangan
                             <select id="fl-airline" required onchange="updateFlightChoice('airline'); updateFlightSegments()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
@@ -275,7 +758,7 @@
                                 <option value="Virgin Australia (VA)">Virgin Australia (VA)</option>
                                 <option value="__other__">Lain-lain (isi sendiri)</option>
                             </select>
-                            <input id="fl-airline-other" maxlength="60" oninput="updateAirlinePreview(); updateFlightSegments()" placeholder="Nama syarikat penerbangan" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-airline-other" maxlength="60" oninput="updateAirlinePreview(); updateFlightSegments()" onchange="rememberFlightChoice('airline')" placeholder="Nama syarikat penerbangan" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                             <span id="fl-airline-mark" class="mt-2 inline-flex items-center gap-2 text-xs text-slate-500" aria-live="polite"></span>
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Harga
@@ -288,7 +771,7 @@
                                 <option value="NZD">NZD — Dolar New Zealand</option>
                                 <option value="__other__">Lain-lain (isi sendiri)</option>
                             </select>
-                            <input id="fl-currency-other" maxlength="8" placeholder="Kod mata wang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target uppercase">
+                            <input id="fl-currency-other" maxlength="8" onchange="rememberFlightChoice('currency')" placeholder="Kod mata wang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target uppercase">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Dari
                             <select id="fl-origin" required onchange="updateFlightChoice('origin'); updateFlightSegments()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
@@ -301,7 +784,7 @@
                                 <option value="SYD">SYD — Sydney Airport</option>
                                 <option value="__other__">Lain-lain (isi sendiri)</option>
                             </select>
-                            <input id="fl-origin-other" maxlength="80" oninput="updateFlightSegments()" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-origin-other" maxlength="80" oninput="updateFlightSegments()" onchange="rememberFlightChoice('origin')" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Ke
                             <select id="fl-destination" required onchange="updateFlightChoice('destination'); updateFlightSegments()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
@@ -314,16 +797,16 @@
                                 <option value="SYD">SYD — Sydney Airport</option>
                                 <option value="__other__">Lain-lain (isi sendiri)</option>
                             </select>
-                            <input id="fl-destination-other" maxlength="80" oninput="updateFlightSegments()" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-destination-other" maxlength="80" oninput="updateFlightSegments()" onchange="rememberFlightChoice('destination')" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Tarikh semak harga
-                            <input id="fl-checked" type="date" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-checked" type="date" lang="ms-MY" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Tarikh pergi
-                            <input id="fl-depart" type="date" required value="2027-05-29" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-depart" type="date" lang="ms-MY" required value="2027-05-29" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <label class="block text-sm font-medium text-slate-700">Tarikh balik
-                            <input id="fl-return" type="date" value="2027-06-11" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                            <input id="fl-return" type="date" lang="ms-MY" value="2027-06-11" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                         </label>
                         <div class="sm:col-span-2 lg:col-span-3 grid md:grid-cols-2 gap-4">
                             <fieldset class="rounded-xl border border-slate-200 p-4 space-y-3">
@@ -340,7 +823,7 @@
                                         <option value="SYD">SYD — Sydney Airport</option>
                                         <option value="__other__">Lain-lain (isi sendiri)</option>
                                     </select>
-                                    <input id="fl-transit-other" maxlength="80" oninput="updateFlightSegments()" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    <input id="fl-transit-other" maxlength="80" oninput="updateFlightSegments()" onchange="rememberFlightChoice('transit')" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 </label>
                                 <div id="fl-outbound-layover" class="grid grid-cols-2 gap-3">
                                     <label class="block text-sm font-medium text-slate-700">Layover pergi (jam)
@@ -352,11 +835,11 @@
                                 </div>
                                 <label class="block text-sm font-medium text-slate-700"><span id="fl-outbound-aircraft-1-label">Pesawat perjalanan pergi</span>
                                     <select id="fl-outbound-aircraft-1" onchange="updateAircraftChoice('outbound-aircraft-1')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
-                                    <input id="fl-outbound-aircraft-1-other" maxlength="80" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    <input id="fl-outbound-aircraft-1-other" maxlength="80" onchange="rememberAircraftChoice('outbound-aircraft-1')" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 </label>
                                 <label id="fl-outbound-segment-2" class="hidden block text-sm font-medium text-slate-700"><span id="fl-outbound-aircraft-2-label">Pesawat segmen seterusnya</span>
                                     <select id="fl-outbound-aircraft-2" onchange="updateAircraftChoice('outbound-aircraft-2')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
-                                    <input id="fl-outbound-aircraft-2-other" maxlength="80" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    <input id="fl-outbound-aircraft-2-other" maxlength="80" onchange="rememberAircraftChoice('outbound-aircraft-2')" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 </label>
                             </fieldset>
                             <fieldset class="rounded-xl border border-slate-200 p-4 space-y-3">
@@ -373,7 +856,7 @@
                                         <option value="SYD">SYD — Sydney Airport</option>
                                         <option value="__other__">Lain-lain (isi sendiri)</option>
                                     </select>
-                                    <input id="fl-transit-return-other" maxlength="80" oninput="updateFlightSegments()" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    <input id="fl-transit-return-other" maxlength="80" oninput="updateFlightSegments()" onchange="rememberFlightChoice('transit-return')" placeholder="Kod dan nama lapangan terbang" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 </label>
                                 <div id="fl-inbound-layover" class="hidden grid grid-cols-2 gap-3">
                                     <label class="block text-sm font-medium text-slate-700">Layover balik (jam)
@@ -385,11 +868,11 @@
                                 </div>
                                 <label class="block text-sm font-medium text-slate-700"><span id="fl-inbound-aircraft-1-label">Pesawat perjalanan balik</span>
                                     <select id="fl-inbound-aircraft-1" onchange="updateAircraftChoice('inbound-aircraft-1')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
-                                    <input id="fl-inbound-aircraft-1-other" maxlength="80" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    <input id="fl-inbound-aircraft-1-other" maxlength="80" onchange="rememberAircraftChoice('inbound-aircraft-1')" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 </label>
                                 <label id="fl-inbound-segment-2" class="hidden block text-sm font-medium text-slate-700"><span id="fl-inbound-aircraft-2-label">Pesawat segmen seterusnya</span>
                                     <select id="fl-inbound-aircraft-2" onchange="updateAircraftChoice('inbound-aircraft-2')" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
-                                    <input id="fl-inbound-aircraft-2-other" maxlength="80" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
+                                    <input id="fl-inbound-aircraft-2-other" maxlength="80" onchange="rememberAircraftChoice('inbound-aircraft-2')" placeholder="Nama/model pesawat" class="hidden mt-2 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
                                 </label>
                             </fieldset>
                             <p id="fl-aircraft-hint" class="hidden text-xs text-slate-500 md:col-span-2"></p>
@@ -406,22 +889,20 @@
 
                 <div id="flight-chart-panel" class="hidden space-y-4">
                     <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4">
-                        <label class="block text-sm font-medium text-slate-700">Laluan &amp; tarikh perjalanan
-                            <select id="fl-route-filter" onchange="renderFlightChart()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
-                        </label>
-                        <label class="block text-sm font-medium text-slate-700">Mata wang graf
-                            <select id="fl-chart-currency" onchange="handleChartCurrencyChange()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target">
-                                <option value="original">Mata wang asal</option>
-                                <option value="MYR">MYR — Ringgit Malaysia</option>
-                                <option value="NZD">NZD — Dolar New Zealand</option>
-                            </select>
-                        </label>
+                        <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                            <label class="block min-w-0 flex-1 text-sm font-medium text-slate-700">Destinasi
+                                <select id="fl-route-filter" onchange="renderFlightChart()" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2.5 touch-target"></select>
+                            </label>
+                        </div>
                         <p id="flight-chart-rate-status" class="hidden rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-800" role="status" aria-live="polite"></p>
                         <div id="flight-chart-legend" class="flex flex-wrap gap-x-4 gap-y-2 text-sm" aria-label="Syarikat penerbangan dalam graf"></div>
+                        <div class="space-y-2">
+                            <p class="text-[11px] font-semibold uppercase tracking-[.14em] text-slate-500">Mata wang paparan</p>
+                            <div id="flight-chart-currency-options" class="flex flex-wrap gap-2" role="group" aria-label="Pilih mata wang untuk graf"></div>
+                        </div>
                         <div class="relative h-72 sm:h-96"><canvas id="flight-chart" aria-label="Graf perubahan harga tiket mengikut tarikh"></canvas></div>
                         <p id="flight-chart-empty" class="hidden text-center text-sm text-slate-500">Belum ada data. Isi data dahulu di tab Isi Data.</p>
-                        <p id="flight-chart-currency-note" class="hidden rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Data pada graf menggunakan mata wang berbeza dan tidak ditukar; jangan bandingkan nilai secara terus.</p>
-                        <p class="text-xs text-slate-500">Kadar tukaran daripada <a href="https://exchangerate.fun/" target="_blank" rel="noopener noreferrer" class="underline">ExchangeRate.fun</a> (dikemas kini setiap jam); nilai ialah anggaran dan kadar bank/kad mungkin berbeza. Setiap garisan ialah satu syarikat penerbangan. Sentuh atau klik satu titik untuk lihat butiran.</p>
+                        <p class="text-xs text-slate-500">Kadar tukaran daripada <a href="https://exchangerate.fun/" target="_blank" rel="noopener noreferrer" class="underline">ExchangeRate.fun</a> (dikemas kini setiap jam); nilai ialah anggaran dan kadar bank/kad mungkin berbeza. Setiap garisan membandingkan syarikat dan lapangan terbang asal untuk destinasi yang dipilih. Klik titik untuk lihat butiran.</p>
                     </div>
                     <div id="flight-detail" class="hidden bg-white border-2 border-indigo-400 rounded-2xl p-4 sm:p-5 space-y-1 text-sm text-slate-700" aria-live="polite"></div>
                 </div>
@@ -470,31 +951,47 @@
             </section>
         </div>
 
-        <div id="portal-view" class="space-y-6 sm:space-y-8">
+        <div id="portal-view">
             <section class="home-hero reveal relative isolate overflow-hidden rounded-[1.75rem] bg-slate-900 text-white flex items-end sm:items-center">
-                <img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1600&q=85" alt="Buku dan bahan bacaan untuk pembelajaran" class="absolute inset-0 -z-20 w-full h-full object-cover object-center">
-                <div class="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/90 via-slate-900/70 to-slate-900/20"></div>
-                <div class="max-w-3xl p-6 sm:p-10 lg:p-12">
-                    <p class="text-xs sm:text-sm font-semibold uppercase text-emerald-300">Ruang belajar · permainan · inspirasi</p>
-                    <h2 class="text-3xl sm:text-5xl font-bold leading-tight mt-3">Selamat datang ke Hub Cg Azri</h2>
-                    <p class="text-slate-100 text-sm sm:text-base max-w-xl mt-4">Satu tempat untuk belajar, uji minda dan teroka perkara baharu.</p>
-                    <div class="flex flex-wrap gap-3 mt-6">
-                        <button type="button" onclick="document.getElementById('ask-category').scrollIntoView({behavior:'smooth'}); document.getElementById('ask-category').open = true" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-semibold px-4 py-2.5 rounded-xl transition">Teroka pembelajaran</button>
-                        <button type="button" onclick="openMindGames()" class="border border-white/70 hover:bg-white/10 text-white font-semibold px-4 py-2.5 rounded-xl transition">Main permainan minda</button>
+                <div class="relative z-10 grid w-full grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <div class="lg:col-span-8 space-y-5">
+                        <p class="text-xs sm:text-sm font-semibold uppercase">RUANG BELAJAR // ARCADE AKTIF</p>
+                        <h2 class="text-3xl sm:text-5xl font-bold leading-tight mt-3">HUB CG <span>AZRI</span></h2>
+                        <p class="text-slate-100 text-sm sm:text-base max-w-2xl mt-4">Belajar, uji minda dan buka cabaran baharu dalam satu arena interaktif.</p>
+                        <div class="flex flex-wrap gap-3 pt-3">
+                            <button type="button" onclick="document.getElementById('ask-category').scrollIntoView({behavior:'smooth'}); document.getElementById('ask-category').open = true" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-mono-arcade font-bold px-5 py-3 rounded-xl transition">TEROKA MODUL</button>
+                            <button type="button" onclick="openMindGames()" class="border border-purple-400/50 bg-[#120E16] hover:bg-purple-900/50 text-purple-200 font-mono-arcade font-bold px-5 py-3 rounded-xl transition">MAIN PERMAINAN</button>
+                        </div>
                     </div>
+                    <aside class="lg:col-span-4 rounded-2xl border border-purple-500/40 bg-[#120E16]/90 p-5 sm:p-6 shadow-inner space-y-5">
+                        <div class="flex items-center justify-between border-b border-purple-500/30 pb-3">
+                            <span class="font-mono-arcade text-xs text-purple-200 uppercase">// PILIH ARENA</span>
+                            <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 arcade-pulse" aria-label="Arena tersedia"></span>
+                        </div>
+                        <button type="button" onclick="promptStudentInfo('linear-search')" class="w-full rounded-xl border border-purple-500/30 bg-[#221A2C] p-4 text-left transition hover:border-amber-400/70">
+                            <span class="font-mono-arcade text-[10px] text-amber-400">STAGE 01 // ASK</span>
+                            <span class="mt-2 block font-display text-base font-extrabold text-white">Algoritma <span class="text-amber-400">Carian Linear</span></span>
+                            <span class="mt-1 block text-xs text-purple-200/80">Susun pseudokod dan bina carta alir.</span>
+                        </button>
+                        <button type="button" onclick="openMindGames()" class="w-full rounded-xl border border-purple-500/30 bg-[#221A2C] p-4 text-left transition hover:border-rose-400/70">
+                            <span class="font-mono-arcade text-[10px] text-rose-400">ARCADE // MINI GAMES</span>
+                            <span class="mt-2 block font-display text-base font-extrabold text-white">Permainan <span class="text-rose-400">Minda</span></span>
+                            <span class="mt-1 block text-xs text-purple-200/80">Buka cabaran pengetahuan dan logik.</span>
+                        </button>
+                    </aside>
                 </div>
             </section>
 
             <details id="ask-category" class="category-group space-y-4 reveal" open>
                 <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
-                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl">💻</span><span class="text-lg sm:text-xl font-bold text-slate-900">Asas Sains Komputer (ASK) Tingkatan 3</span></span>
+                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl">💻</span><span class="text-lg sm:text-xl font-bold text-slate-900">Asas Sains Komputer (ASK) <span class="text-amber-400">Tingkatan 3</span></span></span>
                     <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
                 </summary>
                 <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 gap-4">
                         <button type="button" onclick="promptStudentInfo('linear-search')" class="portal-choice w-full text-left bg-white p-5 sm:p-6 rounded-2xl shadow-sm border-2 border-indigo-500 hover:shadow-md transition flex flex-col justify-between group">
-                            <span class="bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full self-start">Bab 3: Algoritma</span>
-                            <h3 class="text-lg font-bold text-slate-900 mt-3 group-hover:text-indigo-600 transition">Modul 1: Algoritma Carian Linear</h3>
+                            <span class="font-pixel bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full self-start">Bab 3: Algoritma</span>
+                            <h3 class="text-lg font-bold text-slate-900 mt-3 group-hover:text-indigo-600 transition">Modul 1: <span class="text-amber-400">Algoritma</span> <span class="text-rose-400">Carian Linear</span></h3>
                             <p class="text-slate-600 text-sm mt-2">Susun langkah pseudokod dan bina carta alir carian linear.</p>
                             <span class="mt-5 flex items-center justify-between text-indigo-600 font-semibold text-sm"><span>Mula Belajar</span><span>→</span></span>
                         </button>
@@ -515,7 +1012,7 @@
 
             <details id="games-category" class="category-group space-y-4 reveal" open>
                 <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
-                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl">🧠</span><span class="text-lg sm:text-xl font-bold text-slate-900">Permainan Minda</span></span>
+                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl">🧠</span><span class="text-lg sm:text-xl font-bold text-slate-900">Permainan <span class="text-rose-400">Minda</span></span></span>
                     <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
                 </summary>
                 <div class="space-y-4">
@@ -531,11 +1028,11 @@
                         <summary class="px-4 py-3 text-sm font-semibold text-slate-700 cursor-pointer">Lihat 3 permainan lagi</summary>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4 pb-4">
                             <button type="button" onclick="openMindGames('jawi')" class="text-left rounded-xl border border-slate-200 p-4 hover:border-indigo-400 transition">
-                                <span class="text-xl">ﺝ</span><h4 class="font-bold text-slate-900 mt-2">Jawi Bestari</h4>
+                                <span class="game-icon game-icon-jawi" lang="ms-Arab" aria-hidden="true">ج</span><h4 class="font-bold text-slate-900 mt-2">Jawi Bestari</h4>
                                 <p class="text-xs text-slate-600 mt-1">Rumi ke Jawi dan Jawi ke Rumi (rujuk PRPM DBP).</p>
                             </button>
                             <button type="button" onclick="openMindGames('malaysia')" class="text-left rounded-xl border border-slate-200 p-4 hover:border-emerald-400 transition">
-                                <span class="text-xl">🇲🇾</span><h4 class="font-bold text-slate-900 mt-2">Misi Malaysia</h4>
+                                <span class="game-icon game-icon-malaysia" aria-hidden="true">✦ MY</span><h4 class="font-bold text-slate-900 mt-2">Misi Malaysia</h4>
                                 <p class="text-xs text-slate-600 mt-1">Fakta negara, sejarah dan geografi.</p>
                             </button>
                             <button type="button" onclick="openMindGames('logic')" class="text-left rounded-xl border border-slate-200 p-4 hover:border-amber-400 transition">
@@ -560,7 +1057,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div>
                     <button onclick="goToPortal()" class="text-indigo-600 text-sm font-semibold hover:underline mb-1 inline-block">← Kembali ke Senarai Modul</button>
-                    <h2 class="text-2xl font-bold text-slate-900">Modul 1: Carian Linear (Linear Search)</h2>
+                    <h2 class="text-2xl font-bold text-slate-900">Modul 1: <span class="text-amber-400">Carian Linear</span> (Linear Search)</h2>
                     <p class="text-slate-600 text-sm mt-1">Pelajar: <span id="display-student" class="font-bold text-indigo-600"></span> | Senarai data: <code class="bg-slate-100 px-2 py-0.5 rounded text-indigo-600 font-semibold">L = [23, 99, 1, 54, 73, 21]</code>. Cari nilai <code class="bg-slate-100 px-2 py-0.5 rounded text-indigo-600 font-semibold">j = 3</code></p>
                 </div>
                 <button onclick="resetModule()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">🔄 Reset Semula</button>
@@ -572,13 +1069,13 @@
             <div id="view-fasa1" class="space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-900 mb-4 flex items-center justify-between"><span>📦 Bank Pilihan Langkah</span><span class="text-xs text-slate-500 font-normal">Paparan tatal (scrollable)</span></h3>
+                        <h3 class="font-bold text-slate-900 mb-4 flex items-center justify-between"><span>📦 Bank Pilihan Langkah</span>                        <span class="text-xs text-slate-500 font-normal">Tarik ke petak, atau pilih langkah kemudian tekan petak</span></h3>
                         <div id="bank-fasa1" class="space-y-2.5 max-h-[380px] overflow-y-auto p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300"><!-- Diisi JS --></div>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-bold text-slate-900 mb-4">📋 Ruang Susunan Pseudokod (1 - 17)</h3>
                         <div id="slots-fasa1" class="space-y-2.5 max-h-[450px] overflow-y-auto p-2"><!-- Diisi JS --></div>
-                        <div class="mt-6 flex gap-4"><button onclick="checkFasa1()" class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-sm">Semak Jawapan Fasa 1</button></div>
+                        <div class="mt-6 flex gap-4"><button onclick="checkFasa1()" class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-sm">Semak & Hantar Jawapan Fasa 1</button></div>
                     </div>
                 </div>
             </div>
@@ -592,7 +1089,7 @@
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-bold text-slate-900 mb-4 flex items-center justify-between">
                             <span>📦 Bank Pernyataan Carta Alir (17 Baris)</span>
-                            <span class="text-xs text-slate-500 font-normal">Seret ke petak kanan</span>
+                            <span class="text-xs text-slate-500 font-normal">Tarik ke slot, atau pilih langkah kemudian tekan slot</span>
                         </h3>
                         <div id="bank-fasa2" class="space-y-2.5 max-h-[380px] overflow-y-auto p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300">
                             <!-- Diisi JS -->
@@ -619,14 +1116,14 @@
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-4">
                 <div>
                     <button type="button" onclick="goToPortal()" class="text-sm text-indigo-700 font-semibold hover:underline">← Kembali ke Portal</button>
-                    <h2 class="text-2xl font-bold text-slate-900 mt-2">Permainan Minda</h2>
+                    <h2 class="text-2xl font-bold text-slate-900 mt-2">Permainan <span class="text-rose-400">Minda</span></h2>
                 </div>
                 <div class="text-xs text-slate-500">8 soalan rawak · pilih tahap cabaran</div>
             </div>
 
             <div id="games-menu" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button type="button" onclick="selectMindGame('jawi')" class="text-left bg-white p-6 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition">
-                    <span class="text-3xl">ﺝ</span>
+                    <span class="game-icon game-icon-jawi" lang="ms-Arab" aria-hidden="true">ج</span>
                     <h3 class="text-lg font-bold text-slate-900 mt-3">Jawi Bestari</h3>
                     <p class="text-sm text-slate-600 mt-1">Rumi ke Jawi dan Jawi ke Rumi. Ejaan dirujuk pada PRPM DBP.</p>
                     <span class="inline-block mt-4 text-xs font-semibold text-indigo-700">Pilih game →</span>
@@ -638,7 +1135,7 @@
                     <span class="inline-block mt-4 text-xs font-semibold text-indigo-700">Pilih game →</span>
                 </button>
                 <button type="button" onclick="selectMindGame('malaysia')" class="text-left bg-white p-6 rounded-2xl border border-slate-200 hover:border-emerald-400 hover:shadow-md transition">
-                    <span class="text-3xl">🇲🇾</span>
+                    <span class="game-icon game-icon-malaysia" aria-hidden="true">✦ MY</span>
                     <h3 class="text-lg font-bold text-slate-900 mt-3">Misi Malaysia</h3>
                     <p class="text-sm text-slate-600 mt-1">Uji fakta negara, sejarah dan geografi Malaysia.</p>
                     <span class="inline-block mt-4 text-xs font-semibold text-emerald-700">Pilih game →</span>
@@ -668,9 +1165,9 @@
                 <fieldset>
                     <legend class="text-sm font-semibold text-slate-800 mb-3">Tahap cabaran</legend>
                     <div class="grid grid-cols-3 gap-2">
-                        <button type="button" data-game-level="low" onclick="setGameLevel('low')" class="game-level-button p-3 rounded-xl border-2 border-slate-200 text-sm font-semibold hover:border-emerald-400">Rendah</button>
-                        <button type="button" data-game-level="medium" onclick="setGameLevel('medium')" class="game-level-button p-3 rounded-xl border-2 border-indigo-500 bg-indigo-50 text-sm font-semibold">Sederhana</button>
-                        <button type="button" data-game-level="high" onclick="setGameLevel('high')" class="game-level-button p-3 rounded-xl border-2 border-slate-200 text-sm font-semibold hover:border-rose-400">Tinggi</button>
+                        <button type="button" data-game-level="low" aria-pressed="false" onclick="setGameLevel('low')" class="game-level-button p-3 rounded-xl border-2 border-slate-200 text-sm font-semibold hover:border-emerald-400">Rendah</button>
+                        <button type="button" data-game-level="medium" aria-pressed="true" onclick="setGameLevel('medium')" class="game-level-button p-3 rounded-xl border-2 border-indigo-500 bg-indigo-50 text-sm font-semibold">Sederhana</button>
+                        <button type="button" data-game-level="high" aria-pressed="false" onclick="setGameLevel('high')" class="game-level-button p-3 rounded-xl border-2 border-slate-200 text-sm font-semibold hover:border-rose-400">Tinggi</button>
                     </div>
                 </fieldset>
                 <button id="start-game-button" type="button" onclick="startMindGame()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition">Mula Bermain</button>
@@ -714,12 +1211,16 @@
     <div id="toast-box" aria-live="polite"></div>
 
     <!-- Modal Notifikasi Popup -->
-    <div id="popup-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[70] p-4" onclick="handleModalBackdrop(event, 'popup-modal')">
-        <div class="bg-white rounded-2xl p-6 max-w-md w-full text-center shadow-xl space-y-4 relative" onclick="event.stopPropagation()">
+    <div id="popup-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-[70] p-4" onclick="handleModalBackdrop(event, 'popup-modal')">
+        <div id="popup-confetti" aria-hidden="true"></div>
+        <div role="dialog" aria-modal="true" aria-labelledby="popup-title" class="bg-white rounded-2xl p-6 max-w-md w-full text-center shadow-xl space-y-4 relative" onclick="event.stopPropagation()">
             <button type="button" onclick="closePopup()" aria-label="Tutup" class="absolute right-4 top-3 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
             <div id="popup-icon" class="text-5xl">🎉</div>
             <h3 id="popup-title" class="text-xl font-bold text-slate-900">Tahniah!</h3>
             <p id="popup-desc" class="text-slate-600 text-sm">Anda telah melengkapkan fasa ini dengan jayanya.</p>
+            <button id="popup-cancel-btn" type="button" onclick="closePopup()" class="hidden w-full border border-purple-400/60 bg-[#120E16] hover:bg-purple-900/50 text-purple-200 font-semibold py-2.5 rounded-xl transition">
+                Belum, saya mahu semak semula
+            </button>
             <button id="popup-btn" onclick="continuePopup()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl transition">
                 Teruskan Seterusnya
             </button>
@@ -885,7 +1386,7 @@
         let teacherRecords = [];
         let resultSubmitted = false;
         const TEACHER_DASHBOARD_VIEW_KEY = "teacher-dashboard-view";
-        const TEACHER_FLIGHT_TAB_KEY = "teacher-flight-tab";
+        const TEACHER_FLIGHT_TAB_KEY = "teacher-flight-tab-v2";
         const SUPABASE_URL = "https://svvaipcdqlgrgqdplykz.supabase.co";
         const SUPABASE_KEY = "sb_publishable_iPTOcNWjEksO87RUGrnlow_d6jYy7_0";
         const TEACHER_UID = "cf74022f-a7a8-487a-aa40-c5240bcd279e";
@@ -1074,7 +1575,7 @@
             teacherRecords.forEach((record, idx) => {
                 const row = document.createElement('tr');
                 row.className = "hover:bg-slate-50";
-                const values = [idx + 1, record.student_name, record.student_class, "ASK T3 - Carian Linear", record.activity_score === null ? "-" : `${record.activity_score}/34`, new Date(record.created_at).toLocaleString('ms-MY')];
+                const values = [idx + 1, record.student_name, record.student_class, "ASK T3 - Carian Linear", record.activity_score === null ? "-" : `${record.activity_score}/34`, fmtDateTime(record.created_at)];
                 values.forEach((value, columnIndex) => {
                     const cell = document.createElement('td');
                     cell.className = columnIndex === 0 ? "p-2.5 font-medium text-slate-500" : "p-2.5 text-slate-600";
@@ -1137,7 +1638,7 @@
                 record.student_class,
                 "ASK T3 - Carian Linear",
                 record.activity_score === null ? "-" : `${record.activity_score}/34`,
-                new Date(record.created_at).toLocaleString('ms-MY')
+                fmtDateTime(record.created_at)
             ]));
             const csvContent = "\uFEFF" + rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
             const link = document.createElement("a");
@@ -1151,6 +1652,7 @@
         let flightChart = null;
         let chartRateSnapshot = null;
         let chartRateRequestId = 0;
+        let chartDisplayCurrency = 'SGD';
         let editingFlightId = null;
         const flightColors = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#a855f7', '#84cc16', '#ec4899', '#f97316', '#14b8a6'];
         const flightAirports = {
@@ -1178,6 +1680,15 @@
             ['Boeing 737-8 MAX', 'Boeing 737-8 MAX'],
             ['__other__', 'Lain-lain (isi sendiri)']
         ];
+        const flightOptionStorageKey = 'flight-option-catalog-v1';
+        const flightOptionCatalogDefaults = { airlines: [], currencies: [], airports: [], aircraft: [] };
+        const currencyLabels = { SGD: 'Dolar Singapura', MYR: 'Ringgit Malaysia', NZD: 'Dolar New Zealand' };
+        const flightChoiceSelects = {
+            airline: ['fl-airline'],
+            currency: ['fl-currency'],
+            airport: ['fl-origin', 'fl-destination', 'fl-transit', 'fl-transit-return']
+        };
+        let flightOptionCatalog = null;
         const flightDetailsPrefix = '[[flight-details:v1]]';
         const flightDirections = {
             outbound: { transit: 'transit', hours: 'layover-h', minutes: 'layover-m', aircraft: ['outbound-aircraft-1', 'outbound-aircraft-2'] },
@@ -1195,7 +1706,24 @@
         function fmtDate(iso) {
             if(!iso) return '-';
             const [y, m, d] = iso.split('-');
-            return `${Number(d)}/${Number(m)}/${y}`;
+            return `${String(d).padStart(2, '0')}-${String(m).padStart(2, '0')}-${y}`;
+        }
+
+        function fmtDateTime(value) {
+            if(!value) return '-';
+            const date = new Date(value);
+            if(Number.isNaN(date.getTime())) return '-';
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Kuala_Lumpur',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hourCycle: 'h23'
+            }).formatToParts(date);
+            const part = type => parts.find(item => item.type === type)?.value || '';
+            return `${part('day')}-${part('month')}-${part('year')} ${part('hour')}:${part('minute')}`;
         }
 
         function fmtLayover(minutes) {
@@ -1307,13 +1835,135 @@
             return container;
         }
 
+        function loadFlightOptionCatalog() {
+            if(flightOptionCatalog) return flightOptionCatalog;
+            try {
+                const stored = JSON.parse(localStorage.getItem(flightOptionStorageKey) || '{}');
+                flightOptionCatalog = Object.fromEntries(Object.keys(flightOptionCatalogDefaults).map(category => [
+                    category,
+                    Array.isArray(stored[category])
+                        ? [...new Set(stored[category].filter(value => typeof value === 'string').map(value => value.trim()).filter(Boolean))].slice(0, 100)
+                        : []
+                ]));
+            } catch(error) {
+                console.error('Pilihan tersimpan tidak dapat dibaca.', error);
+                flightOptionCatalog = { ...flightOptionCatalogDefaults, airlines: [], currencies: [], airports: [], aircraft: [] };
+                showToast('Pilihan tersimpan tidak dapat dibaca daripada storan pelayar.', 'error');
+            }
+            return flightOptionCatalog;
+        }
+
+        function flightOptionKey(value, category) {
+            const text = String(value || '').trim();
+            return category === 'currencies' ? text.toUpperCase() : text.toLocaleLowerCase();
+        }
+
+        function insertFlightOption(select, value, label) {
+            if([...select.options].some(option => flightOptionKey(option.value, 'currencies') === flightOptionKey(value, 'currencies'))) return;
+            const option = new Option(label, value);
+            const otherOption = [...select.options].find(existing => existing.value === '__other__');
+            select.add(option, otherOption || null);
+        }
+
+        function populateFlightChoiceOptions() {
+            const catalog = loadFlightOptionCatalog();
+            catalog.airlines.forEach(value => insertFlightOption(document.getElementById('fl-airline'), value, value));
+            catalog.currencies.forEach(value => insertFlightOption(
+                document.getElementById('fl-currency'),
+                value.toUpperCase(),
+                `${value.toUpperCase()}${currencyLabels[value.toUpperCase()] ? ` — ${currencyLabels[value.toUpperCase()]}` : ''}`
+            ));
+            catalog.airports.forEach(value => flightChoiceSelects.airport.forEach(id =>
+                insertFlightOption(document.getElementById(id), value, value)
+            ));
+        }
+
         function populateAircraftOptions() {
+            const catalog = loadFlightOptionCatalog();
             flightDirections.outbound.aircraft.concat(flightDirections.inbound.aircraft).forEach(id => {
                 const select = document.getElementById(`fl-${id}`);
-                if(select.options.length) return;
-                select.add(new Option('Pilih jenis pesawat (pilihan)', ''));
-                aircraftChoices.forEach(([value, label]) => select.add(new Option(label, value)));
+                if(!select.options.length) {
+                    select.add(new Option('Pilih jenis pesawat (pilihan)', ''));
+                    aircraftChoices.filter(([value]) => value !== '__other__').forEach(([value, label]) => select.add(new Option(label, value)));
+                }
+                catalog.aircraft.forEach(value => insertFlightOption(select, value, value));
+                if(![...select.options].some(option => option.value === '__other__')) {
+                    select.add(new Option('Lain-lain (isi sendiri)', '__other__'));
+                }
             });
+        }
+
+        function flightOptionIsBuiltIn(category, value) {
+            if(category === 'aircraft') return aircraftChoices.some(([option]) => option === value);
+            const ids = category === 'airlines' ? flightChoiceSelects.airline
+                : category === 'currencies' ? flightChoiceSelects.currency
+                    : flightChoiceSelects.airport;
+            return ids.some(id => [...document.getElementById(id).options].some(option => option.value === value));
+        }
+
+        function rememberFlightOption(category, rawValue) {
+            const catalog = loadFlightOptionCatalog();
+            const value = category === 'currencies' ? String(rawValue || '').trim().toUpperCase() : String(rawValue || '').trim();
+            if(!value || value === '__other__' || flightOptionIsBuiltIn(category, value)) return false;
+            const maxLength = category === 'airlines' ? 60 : category === 'currencies' ? 8 : 80;
+            if(value.length > maxLength || /[\u0000-\u001f]/.test(value)) {
+                showToast('Nilai pilihan terlalu panjang atau mengandungi aksara yang tidak dibenarkan.', 'error');
+                return false;
+            }
+            if(category === 'currencies' && !/^[A-Z]{3,8}$/.test(value)) {
+                showToast('Kod mata wang perlu mengandungi 3 hingga 8 huruf.', 'error');
+                return false;
+            }
+            const key = flightOptionKey(value, category);
+            if(catalog[category].some(existing => flightOptionKey(existing, category) === key)) return true;
+            if(catalog[category].length >= 100) {
+                showToast('Had 100 pilihan tersuai bagi kategori ini telah dicapai.', 'error');
+                return false;
+            }
+            catalog[category].push(value);
+            try {
+                localStorage.setItem(flightOptionStorageKey, JSON.stringify(catalog));
+            } catch(error) {
+                catalog[category].pop();
+                console.error('Pilihan baharu tidak dapat disimpan.', error);
+                showToast('Pilihan baharu tidak dapat disimpan dalam storan pelayar.', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        function rememberFlightChoice(type) {
+            const select = document.getElementById(`fl-${type}`);
+            if(select.value !== '__other__') return;
+            const category = type === 'airline' ? 'airlines' : type === 'currency' ? 'currencies' : 'airports';
+            const input = document.getElementById(`fl-${type}-other`);
+            if(category === 'currencies') input.value = input.value.toUpperCase();
+            if(rememberFlightOption(category, input.value)) {
+                populateFlightChoiceOptions();
+                if(category === 'currencies') refreshChartCurrencyOptions();
+            }
+        }
+
+        function rememberAircraftChoice(id) {
+            if(document.getElementById(`fl-${id}`).value !== '__other__') return;
+            const input = document.getElementById(`fl-${id}-other`);
+            if(rememberFlightOption('aircraft', input.value)) populateAircraftOptions();
+        }
+
+        function rememberCustomFlightOptions() {
+            ['airline', 'currency', 'origin', 'destination', 'transit', 'transit-return'].forEach(rememberFlightChoice);
+            flightDirections.outbound.aircraft.concat(flightDirections.inbound.aircraft).forEach(rememberAircraftChoice);
+            populateFlightChoiceOptions();
+            populateAircraftOptions();
+        }
+
+        function rememberFlightRowOptions(row) {
+            rememberFlightOption('airlines', row.airline);
+            rememberFlightOption('currencies', row.currency);
+            ['origin', 'destination'].forEach(field => rememberFlightOption('airports', row[field]));
+            const details = getFlightDetails(row);
+            [details.outboundTransit, details.inboundTransit, details.outboundAircraft1, details.outboundAircraft2, details.inboundAircraft1, details.inboundAircraft2]
+                .forEach((value, index) => rememberFlightOption(index < 2 ? 'airports' : 'aircraft', value));
         }
 
         function updateAircraftChoice(id) {
@@ -1407,12 +2057,13 @@
             return logo;
         }
 
-        function createAirlineDisplay(airline) {
+        function createAirlineDisplay(airline, logoOnly = false) {
+            const brand = getAirlineBrand(airline);
             const display = document.createElement('span');
             display.className = 'airline-legend-item';
             const logo = createAirlineMark(airline);
             if(logo) display.appendChild(logo);
-            display.appendChild(document.createTextNode(normalizeAirlineName(airline)));
+            if(!logoOnly || !brand) display.appendChild(document.createTextNode(normalizeAirlineName(airline)));
             return display;
         }
 
@@ -1478,12 +2129,29 @@
             updateFlightChoice(type);
         }
 
+        function airportKey(value) {
+            const airport = String(value || '').trim();
+            const code = airport.match(/^[A-Za-z]{3}(?=\s*[-–—]|$)/)?.[0] ||
+                airport.match(/^([A-Z]{3})(?=\s)/)?.[1] ||
+                airport.match(/\(([A-Za-z]{3})\)/)?.[1];
+            const knownAirport = Object.entries(flightAirports).find(([, name]) => name.toLocaleLowerCase() === airport.toLocaleLowerCase());
+            return (code || knownAirport?.[0] || airport).toLocaleLowerCase().replace(/\s+/g, ' ');
+        }
+
+        function airportShortLabel(value) {
+            const text = String(value || '').trim();
+            const code = text.match(/^[A-Za-z]{3}(?=\s*[-–—]|$)/)?.[0] ||
+                text.match(/^([A-Z]{3})(?=\s)/)?.[1] ||
+                text.match(/\(([A-Za-z]{3})\)/)?.[1];
+            return code ? code.toUpperCase() : text.length > 14 ? `${text.slice(0, 12)}…` : text;
+        }
+
         function routeKey(row) {
-            return [row.origin, row.destination, row.depart_date, row.return_date || ''].join('|');
+            return airportKey(row.destination);
         }
 
         function routeLabel(row) {
-            return `${formatAirport(row.origin)} ⇄ ${formatAirport(row.destination)} · ${fmtDate(row.depart_date)}${row.return_date ? ' – ' + fmtDate(row.return_date) : ''}`;
+            return formatAirport(row.destination);
         }
 
         function showFlightError(error) {
@@ -1502,9 +2170,11 @@
             document.getElementById('teacher-records-view').classList.add('hidden');
             document.getElementById('teacher-flights-view').classList.remove('hidden');
             document.getElementById('nav-breadcrumb').innerText = "Penjejak Harga Tiket";
+            populateFlightChoiceOptions();
+            populateAircraftOptions();
             resetFlightForm();
-            const savedTab = restoreSavedTab ? sessionStorage.getItem(TEACHER_FLIGHT_TAB_KEY) : 'form';
-            setFlightTab(['form', 'chart', 'list'].includes(savedTab) ? savedTab : 'form');
+            const savedTab = restoreSavedTab ? sessionStorage.getItem(TEACHER_FLIGHT_TAB_KEY) : 'chart';
+            setFlightTab(['form', 'chart', 'list'].includes(savedTab) ? savedTab : 'chart');
             await loadFlights();
         }
 
@@ -1512,13 +2182,21 @@
             const { data, error } = await supabaseClient.from('flight_prices').select('*').order('checked_on', { ascending: true }).order('created_at', { ascending: true });
             if(error) { showFlightError(error); flightRows = []; }
             else { showFlightError(null); flightRows = data; }
+            flightRows.forEach(rememberFlightRowOptions);
+            populateFlightChoiceOptions();
+            populateAircraftOptions();
+            refreshChartCurrencyOptions();
             refreshFlightLists();
             renderFlightTable();
-            renderFlightChart();
+            if(flightRows.length) await handleChartCurrencyChange(chartDisplayCurrency);
+            else renderFlightChart();
         }
 
         function setFlightTab(tab) {
             sessionStorage.setItem(TEACHER_FLIGHT_TAB_KEY, tab);
+            const chartPanel = document.getElementById('flight-chart-panel');
+            const form = document.getElementById('flight-form');
+            if(chartPanel.nextElementSibling !== form) form.parentElement.insertBefore(chartPanel, form);
             document.getElementById('flight-form').classList.toggle('hidden', tab !== 'form');
             document.getElementById('flight-chart-panel').classList.toggle('hidden', tab !== 'chart');
             document.getElementById('flight-list-panel').classList.toggle('hidden', tab !== 'list');
@@ -1529,6 +2207,10 @@
                 button.classList.toggle('border-slate-200', !active);
                 button.setAttribute('aria-selected', active);
             });
+            const activePanel = tab === 'form' ? form : tab === 'chart' ? chartPanel : document.getElementById('flight-list-panel');
+            activePanel.classList.remove('flight-panel-enter');
+            void activePanel.offsetWidth;
+            activePanel.classList.add('flight-panel-enter');
             if(tab === 'chart') renderFlightChart();
         }
 
@@ -1538,7 +2220,7 @@
             select.innerHTML = '';
             const seen = new Map();
             flightRows.forEach(row => { if(!seen.has(routeKey(row))) seen.set(routeKey(row), routeLabel(row)); });
-            seen.forEach((label, key) => {
+            [...seen.entries()].sort((a, b) => a[1].localeCompare(b[1], 'ms')).forEach(([key, label]) => {
                 const option = document.createElement('option');
                 option.value = key;
                 option.textContent = label;
@@ -1547,8 +2229,30 @@
             if(seen.has(previous)) select.value = previous;
         }
 
+        function refreshChartCurrencyOptions() {
+            const container = document.getElementById('flight-chart-currency-options');
+            const currencies = new Set(['SGD', 'MYR', 'NZD']);
+            loadFlightOptionCatalog().currencies.forEach(currency => currencies.add(currency.toUpperCase()));
+            flightRows.forEach(row => {
+                if(/^[A-Z]{3,8}$/i.test(String(row.currency || ''))) currencies.add(row.currency.toUpperCase());
+            });
+            const options = [...currencies].sort().map(currency => [currency, currency]);
+            container.replaceChildren(...options.map(([value, label]) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'currency-chip';
+                button.dataset.currency = value;
+                button.textContent = label;
+                button.setAttribute('aria-label', `Tukar graf kepada ${currencyLabels[value] ? `${value} — ${currencyLabels[value]}` : value}`);
+                button.setAttribute('aria-pressed', String(value === chartDisplayCurrency));
+                button.addEventListener('click', () => handleChartCurrencyChange(value));
+                return button;
+            }));
+        }
+
         function resetFlightForm() {
             editingFlightId = null;
+            populateFlightChoiceOptions();
             populateAircraftOptions();
             document.getElementById('flight-form').reset();
             ['airline', 'currency', 'origin', 'destination', 'transit', 'transit-return'].forEach(updateFlightChoice);
@@ -1562,6 +2266,7 @@
 
         async function saveFlightPrice(event) {
             event.preventDefault();
+            rememberCustomFlightOptions();
             const details = getFlightDetailsFromForm();
             const payload = {
                 airline: getFlightChoice('airline'),
@@ -1587,7 +2292,7 @@
             resetFlightForm();
             await loadFlights();
             document.getElementById('fl-route-filter').value = keepRoute;
-            renderFlightChart();
+            setFlightTab('chart');
         }
 
         function editFlightRow(id) {
@@ -1730,28 +2435,44 @@
         }
 
         function formatConvertedPrice(row, targetCurrency) {
-            const sourceCurrency = String(row.currency || '').toUpperCase();
-            const sourceRate = sourceCurrency === 'SGD' ? 1 : Number(chartRateSnapshot?.rates[sourceCurrency]);
-            const targetRate = Number(chartRateSnapshot?.rates[targetCurrency]);
-            const converted = Number(row.price) / sourceRate * targetRate;
-            return new Intl.NumberFormat('ms-MY', {
-                style: 'currency',
-                currency: targetCurrency,
-                maximumFractionDigits: 2
-            }).format(converted);
+            const converted = getConvertedPriceValue(row, targetCurrency);
+            return converted === null ? `${targetCurrency} —` : formatCurrencyAmount(converted, targetCurrency);
         }
 
-        async function handleChartCurrencyChange() {
-            const targetCurrency = document.getElementById('fl-chart-currency').value;
+        function getConvertedPriceValue(row, targetCurrency) {
+            const sourceCurrency = String(row.currency || '').toUpperCase();
+            const sourceRate = getCurrencyRate(sourceCurrency);
+            const targetRate = getCurrencyRate(targetCurrency);
+            if(sourceRate === null || targetRate === null) return null;
+            return Number(row.price) / sourceRate * targetRate;
+        }
+
+        function getCurrencyRate(currency) {
+            const normalized = String(currency || '').toUpperCase();
+            if(normalized === 'SGD') return 1;
+            const rate = Number(chartRateSnapshot?.rates[normalized]);
+            return Number.isFinite(rate) && rate > 0 ? rate : null;
+        }
+
+        function formatCurrencyAmount(amount, currency) {
+            try {
+                return new Intl.NumberFormat('ms-MY', {
+                    style: 'currency',
+                    currency,
+                    maximumFractionDigits: 2
+                }).format(amount);
+            } catch(error) {
+                return `${currency} ${Number(amount).toLocaleString('ms-MY', { maximumFractionDigits: 2 })}`;
+            }
+        }
+
+        async function handleChartCurrencyChange(targetCurrency) {
+            if(!targetCurrency) return;
+            chartDisplayCurrency = targetCurrency;
             const requestId = ++chartRateRequestId;
             const status = document.getElementById('flight-chart-rate-status');
+            refreshChartCurrencyOptions();
             chartRateSnapshot = null;
-            if(targetCurrency === 'original') {
-                status.classList.add('hidden');
-                renderFlightChart();
-                return;
-            }
-
             status.classList.remove('hidden');
             status.classList.remove('bg-rose-50', 'text-rose-800');
             status.classList.add('bg-indigo-50', 'text-indigo-800');
@@ -1765,11 +2486,16 @@
                 if(data.base !== 'SGD' || !Number.isFinite(Number(data.timestamp)) || !data.rates || typeof data.rates !== 'object') {
                     throw new Error('Format kadar tukaran yang diterima tidak sah.');
                 }
-                if(!Number.isFinite(Number(data.rates[targetCurrency])) || Number(data.rates[targetCurrency]) <= 0) {
+                const targetRate = targetCurrency === 'SGD' ? 1 : Number(data.rates[targetCurrency]);
+                if(!Number.isFinite(targetRate) || targetRate <= 0) {
                     throw new Error(`Kadar ${targetCurrency} tidak tersedia.`);
                 }
                 if(requestId !== chartRateRequestId) return;
                 chartRateSnapshot = { rates: data.rates, timestamp: Number(data.timestamp) };
+                status.classList.remove('hidden', 'bg-rose-50', 'text-rose-800');
+                status.classList.add('bg-indigo-50', 'text-indigo-800');
+                status.setAttribute('role', 'status');
+                status.textContent = `Kadar indikatif ExchangeRate.fun (${fmtDateTime(chartRateSnapshot.timestamp * 1000)}): 1 SGD = ${targetRate.toFixed(4)} ${targetCurrency}.`;
                 renderFlightChart();
             } catch(error) {
                 if(requestId !== chartRateRequestId) return;
@@ -1786,86 +2512,100 @@
             const canvas = document.getElementById('flight-chart');
             const empty = document.getElementById('flight-chart-empty');
             const key = document.getElementById('fl-route-filter').value;
-            const rows = flightRows.filter(r => routeKey(r) === key);
+            const rows = flightRows.filter(row => routeKey(row) === key)
+                .sort((a, b) => a.checked_on.localeCompare(b.checked_on) || String(a.created_at || '').localeCompare(String(b.created_at || '')));
             const legend = document.getElementById('flight-chart-legend');
-            const currencyNote = document.getElementById('flight-chart-currency-note');
             const status = document.getElementById('flight-chart-rate-status');
-            const targetCurrency = document.getElementById('fl-chart-currency').value;
+            const targetCurrency = chartDisplayCurrency;
             legend.replaceChildren();
             document.getElementById('flight-detail').classList.add('hidden');
             if(flightChart) { flightChart.destroy(); flightChart = null; }
             empty.classList.toggle('hidden', rows.length > 0);
             canvas.classList.toggle('hidden', rows.length === 0);
-            currencyNote.classList.toggle('hidden', targetCurrency !== 'original' || new Set(rows.map(row => row.currency)).size < 2);
             if(rows.length === 0) {
                 return;
             }
-            if(targetCurrency !== 'original' && !chartRateSnapshot) {
+            if(!chartRateSnapshot) {
                 canvas.classList.add('hidden');
                 return;
             }
-            const dates = [...new Set(rows.map(r => r.checked_on))].sort();
-            const airlines = [...new Set(rows.map(r => normalizeAirlineName(r.airline)))];
-            airlines.forEach(airline => legend.appendChild(createAirlineDisplay(airline)));
-            const currencies = [...new Set(rows.map(row => row.currency))];
             if(!window.Chart) return;
-            const cell = {};
-            rows.forEach(r => { cell[`${normalizeAirlineName(r.airline)}|${r.checked_on}`] = r; });
+            const seriesByKey = new Map();
+            rows.forEach(row => {
+                const airline = normalizeAirlineName(row.airline);
+                const originKey = airportKey(row.origin);
+                const key = `${airline}|${originKey}`;
+                if(!seriesByKey.has(key)) seriesByKey.set(key, { key, airline, origin: row.origin });
+            });
+            const series = [...seriesByKey.values()];
+            series.forEach(item => {
+                const entry = createAirlineDisplay(item.airline, true);
+                const origin = document.createElement('span');
+                origin.className = 'rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600';
+                origin.textContent = airportShortLabel(item.origin);
+                origin.title = formatAirport(item.origin);
+                entry.appendChild(origin);
+                legend.appendChild(entry);
+            });
             let excludedRows = 0;
             const chartValue = row => {
-                if(targetCurrency === 'original') return Number(row.price);
                 const sourceCurrency = String(row.currency || '').toUpperCase();
-                const sourceRate = sourceCurrency === 'SGD' ? 1 : Number(chartRateSnapshot.rates[sourceCurrency]);
-                const targetRate = Number(chartRateSnapshot.rates[targetCurrency]);
-                if(!Number.isFinite(sourceRate) || sourceRate <= 0) {
+                const sourceRate = getCurrencyRate(sourceCurrency);
+                const targetRate = getCurrencyRate(targetCurrency);
+                if(sourceRate === null || targetRate === null) {
                     excludedRows += 1;
                     return null;
                 }
                 return Number(row.price) / sourceRate * targetRate;
             };
-            const values = new Map(rows.map(row => [`${normalizeAirlineName(row.airline)}|${row.checked_on}`, chartValue(row)]));
-            const availableValues = [...values.values()].filter(value => value !== null);
-            if(targetCurrency !== 'original') {
-                const rateDate = new Date(chartRateSnapshot.timestamp * 1000).toLocaleString('ms-MY');
-                status.classList.remove('hidden', 'bg-rose-50', 'text-rose-800');
-                status.classList.add('bg-indigo-50', 'text-indigo-800');
-                status.setAttribute('role', 'status');
-                status.textContent = `Kadar indikatif ExchangeRate.fun (${rateDate}): 1 SGD = ${Number(chartRateSnapshot.rates[targetCurrency]).toFixed(4)} ${targetCurrency}.` +
-                    (excludedRows ? ` ${excludedRows} rekod tidak dipaparkan kerana mata wang asalnya tidak disokong.` : '');
-                if(availableValues.length === 0) {
-                    canvas.classList.add('hidden');
-                    status.classList.remove('bg-indigo-50', 'text-indigo-800');
-                    status.classList.add('bg-rose-50', 'text-rose-800');
-                    status.setAttribute('role', 'alert');
-                    status.textContent = 'Tiada rekod boleh ditukar kerana mata wang asal tidak disokong oleh perkhidmatan kadar tukaran.';
-                    return;
-                }
+            const values = rows.map(chartValue);
+            const availableValues = values.filter(value => value !== null);
+            const rateDate = fmtDateTime(chartRateSnapshot.timestamp * 1000);
+            const targetRate = getCurrencyRate(targetCurrency);
+            status.classList.remove('hidden', 'bg-rose-50', 'text-rose-800');
+            status.classList.add('bg-indigo-50', 'text-indigo-800');
+            status.setAttribute('role', 'status');
+            status.textContent = `Kadar indikatif ExchangeRate.fun (${rateDate}): 1 SGD = ${targetRate.toFixed(4)} ${targetCurrency}.` +
+                (excludedRows ? ` ${excludedRows} rekod tidak dipaparkan kerana mata wang asalnya tidak disokong.` : '');
+            if(availableValues.length === 0) {
+                canvas.classList.add('hidden');
+                status.classList.remove('bg-indigo-50', 'text-indigo-800');
+                status.classList.add('bg-rose-50', 'text-rose-800');
+                status.setAttribute('role', 'alert');
+                status.textContent = 'Tiada rekod boleh ditukar kerana mata wang asal tidak disokong oleh perkhidmatan kadar tukaran.';
+                return;
             }
-            const dark = document.body.classList.contains('theme-dark');
-            const textColor = dark ? '#e2e8f0' : '#1e293b';
-            const gridColor = dark ? 'rgba(148,163,184,.25)' : 'rgba(30,41,59,.15)';
-            const datasets = airlines.map((airline, i) => ({
-                label: airline,
-                data: dates.map(d => values.get(`${airline}|${d}`) ?? null),
-                borderColor: getAirlineBrand(airline)?.color || flightColors[i % flightColors.length],
-                backgroundColor: getAirlineBrand(airline)?.color || flightColors[i % flightColors.length],
+            const textColor = '#e9ddff';
+            const gridColor = 'rgba(196,181,253,.2)';
+            const origins = [...new Set(series.map(item => airportKey(item.origin)))];
+            const arcadeChartColors = ['#a78bfa', '#fbbf24', '#f43f5e', '#34d399', '#38bdf8', '#c084fc', '#fb923c'];
+            const datasets = series.map((item, index) => ({
+                label: `${getAirlineBrand(item.airline)?.code || item.airline} · ${airportShortLabel(item.origin)}`,
+                data: rows.map((row, rowIndex) => {
+                    const rowSeriesKey = `${normalizeAirlineName(row.airline)}|${airportKey(row.origin)}`;
+                    return rowSeriesKey === item.key ? values[rowIndex] : null;
+                }),
+                borderColor: arcadeChartColors[index % arcadeChartColors.length],
+                backgroundColor: arcadeChartColors[index % arcadeChartColors.length],
+                borderDash: origins.indexOf(airportKey(item.origin)) ? [6, 4] : [],
                 spanGaps: true,
                 tension: 0.25,
-                pointRadius: 6,
-                pointHoverRadius: 9
+                pointRadius: 5,
+                pointHoverRadius: 8
             }));
             flightChart = new Chart(canvas, {
                 type: 'line',
-                data: { labels: dates.map(fmtDate), datasets },
+                data: { labels: rows.map(row => fmtDate(row.checked_on)), datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { duration: 700, easing: 'easeOutQuart' },
                     interaction: { mode: 'nearest', intersect: true },
                     onClick: (event, elements) => {
                         if(!elements.length) return;
                         const { datasetIndex, index } = elements[0];
-                        const row = cell[`${airlines[datasetIndex]}|${dates[index]}`];
-                        if(row) showFlightDetail(row, targetCurrency === 'original' ? '' : targetCurrency);
+                        const row = rows[index];
+                        if(row && datasets[datasetIndex].data[index] !== null) showFlightDetail(row, targetCurrency);
                     },
                     plugins: {
                         legend: { display: false },
@@ -1873,11 +2613,13 @@
                             enabled: true,
                             callbacks: {
                                 label: context => {
-                                    const row = cell[`${airlines[context.datasetIndex]}|${dates[context.dataIndex]}`];
+                                    const row = rows[context.dataIndex];
                                     if(!row) return context.dataset.label;
-                                    return targetCurrency === 'original'
-                                        ? `${row.airline}: ${fmtPrice(row)}`
-                                        : `${row.airline}: ${formatConvertedPrice(row, targetCurrency)} (asal ${fmtPrice(row)})`;
+                                    const convertedPrice = getConvertedPriceValue(row, targetCurrency);
+                                    const price = convertedPrice === null
+                                        ? '—'
+                                        : convertedPrice.toLocaleString('ms-MY', { maximumFractionDigits: 2 });
+                                    return `${row.airline} · ${airportShortLabel(row.origin)} → ${airportShortLabel(row.destination)}: ${price}`;
                                 }
                             }
                         }
@@ -1887,12 +2629,10 @@
                         y: {
                             ticks: {
                                 color: textColor,
-                                callback: value => targetCurrency === 'original'
-                                    ? Number(value).toLocaleString('ms-MY')
-                                    : new Intl.NumberFormat('ms-MY', { style: 'currency', currency: targetCurrency, maximumFractionDigits: 0 }).format(value)
+                                callback: value => Number(value).toLocaleString('ms-MY', { maximumFractionDigits: 2 })
                             },
                             grid: { color: gridColor },
-                            title: { display: true, text: targetCurrency !== 'original' ? `Harga (${targetCurrency})` : currencies.length === 1 ? `Harga (${currencies[0]})` : 'Harga (mata wang asal)', color: textColor }
+                            title: { display: true, text: `Harga (${targetCurrency})`, color: textColor }
                         }
                     }
                 }
@@ -1933,6 +2673,7 @@
 
         function promptStudentInfo(modId) {
             activeModuleId = modId;
+            populateStudentClassOptions();
             document.getElementById('input-name').value = "";
             document.getElementById('input-class').value = "";
             document.getElementById('input-class-other').value = "";
@@ -1946,6 +2687,72 @@
             otherClass.classList.toggle('hidden', !isOther);
             otherClass.required = isOther;
             if(isOther) otherClass.focus();
+        }
+
+        const studentClassStorageKey = 'portal-student-class-options-v1';
+
+        function normalizeStudentClass(value) {
+            const match = String(value || '').trim().replace(/\s+/g, ' ').match(/^(\d+)\s+(.+)$/);
+            return match ? `${match[1]} ${match[2].trim()}` : '';
+        }
+
+        function studentClassKey(value) {
+            return normalizeStudentClass(value).toLocaleLowerCase('ms-MY');
+        }
+
+        function loadStudentClasses() {
+            try {
+                const stored = localStorage.getItem(studentClassStorageKey);
+                if(!stored) return [];
+                const parsed = JSON.parse(stored);
+                if(!Array.isArray(parsed)) throw new Error('Senarai kelas tersimpan bukan dalam format senarai.');
+                return parsed.map(normalizeStudentClass).filter(Boolean);
+            } catch(error) {
+                console.error('Gagal membaca senarai kelas tersimpan.', error);
+                showToast('Senarai kelas tersimpan tidak dapat dibaca. Kelas lalai masih tersedia.', 'error');
+                return [];
+            }
+        }
+
+        function populateStudentClassOptions() {
+            const select = document.getElementById('input-class');
+            const otherOption = select.querySelector('option[value="__other__"]');
+            select.querySelectorAll('option[data-custom-class="true"]').forEach(option => option.remove());
+            const known = new Set([...select.options].map(option => studentClassKey(option.value)));
+            loadStudentClasses().forEach(studentClass => {
+                const key = studentClassKey(studentClass);
+                if(!key || known.has(key)) return;
+                known.add(key);
+                const option = document.createElement('option');
+                option.value = studentClass;
+                option.textContent = studentClass;
+                option.dataset.customClass = 'true';
+                select.insertBefore(option, otherOption);
+            });
+        }
+
+        function rememberStudentClass(value) {
+            const studentClass = normalizeStudentClass(value);
+            if(!studentClass) return false;
+            const classes = loadStudentClasses();
+            if(classes.some(existing => studentClassKey(existing) === studentClassKey(studentClass))) return true;
+            classes.push(studentClass);
+            try {
+                localStorage.setItem(studentClassStorageKey, JSON.stringify(classes));
+                return true;
+            } catch(error) {
+                console.error('Gagal menyimpan pilihan kelas.', error);
+                showToast('Kelas baharu tidak dapat disimpan pada peranti ini.', 'error');
+                return false;
+            }
+        }
+
+        function resolveStudentClass(value) {
+            const normalized = normalizeStudentClass(value);
+            const key = studentClassKey(normalized);
+            const options = [...document.getElementById('input-class').options].map(option => option.value);
+            const knownClass = [...options, ...loadStudentClasses()].find(option => option !== '__other__' && studentClassKey(option) === key);
+            return knownClass || normalized;
         }
 
         function closeStudentModal() {
@@ -1962,12 +2769,13 @@
             const name = document.getElementById('input-name').value.trim();
             const selectedClass = document.getElementById('input-class').value;
             const cls = selectedClass === '__other__'
-                ? document.getElementById('input-class-other').value.trim()
+                ? resolveStudentClass(document.getElementById('input-class-other').value)
                 : selectedClass;
             if(!name || !cls) {
-                alert("Sila masukkan Nama Pendek dan Kelas anda.");
+                showPopup("Maklumat kelas belum lengkap", "Masukkan kelas dalam format nombor tingkatan dan nama kelas, contohnya 4 MMU.", "Kembali mengisi", false);
                 return;
             }
+            if(selectedClass === '__other__') rememberStudentClass(cls);
             currentStudent.name = name;
             currentStudent.cls = cls;
             resultSubmitted = false;
@@ -2018,6 +2826,7 @@
             selectedGameLevel = level;
             document.querySelectorAll('.game-level-button').forEach(button => {
                 const active = button.dataset.gameLevel === level;
+                button.setAttribute('aria-pressed', String(active));
                 button.classList.toggle('border-indigo-500', active);
                 button.classList.toggle('bg-indigo-50', active);
                 button.classList.toggle('border-slate-200', !active);
@@ -2142,7 +2951,7 @@
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.dataset.answer = option;
-                button.className = "min-h-12 rounded-xl border-2 border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 transition";
+                button.className = "game-answer-button min-h-12 rounded-xl border-2 border-slate-200 px-4 py-3 text-sm font-semibold transition";
                 button.textContent = option;
                 if(question.jawiOptions) { button.classList.add('jawi-text'); button.lang = 'ms-Arab'; }
                 button.addEventListener('click', () => answerMindGame(option, question.answer, button));
@@ -2157,10 +2966,10 @@
                 button.disabled = true;
                 button.classList.remove('hover:border-indigo-400', 'hover:bg-indigo-50');
                 if(button.dataset.answer === correctAnswer) {
-                    button.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800');
+                    button.classList.add('is-correct');
                 }
             });
-            if(!correct) selectedButton.classList.add('border-rose-400', 'bg-rose-50', 'text-rose-800');
+            if(!correct) selectedButton.classList.add('is-wrong');
             const feedback = document.getElementById('game-feedback');
             feedback.innerText = correct ? "Tepat!" : `Belum tepat. Jawapan: ${correctAnswer}`;
             feedback.className = `text-sm font-semibold text-center ${correct ? 'text-emerald-700' : 'text-rose-700'}`;
@@ -2200,6 +3009,12 @@
                         ? "Bagus, teruskan asah minda."
                         : "Terus mencuba, setiap pusingan bantu bina kemahiran.";
             document.getElementById('game-result-message').innerText = message;
+            showPopup(
+                percentage >= 0.75 ? "Syabas, hebat!" : "Pusingan Tamat",
+                `Skor anda ${currentGameScore}/${gameQuestionCount}. ${message}`,
+                "Lihat keputusan",
+                percentage >= 0.75
+            );
         }
 
         function goToPortal() {
@@ -2236,6 +3051,10 @@
                 v1.classList.remove('hidden');
                 v2.classList.add('hidden');
             } else {
+                if(!fasa1Unlocked) {
+                    showPopup("Fasa 2 masih terkunci", "Hantar jawapan Fasa 1 dahulu untuk membuka aktiviti carta alir.", "Tutup", false);
+                    return;
+                }
                 btn2.className = "pb-3 font-semibold text-indigo-600 border-b-2 border-indigo-600 transition";
                 btn1.className = "pb-3 font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition";
                 v2.classList.remove('hidden');
@@ -2247,63 +3066,196 @@
         function initFasa1() {
             const bank = document.getElementById('bank-fasa1');
             const slots = document.getElementById('slots-fasa1');
+            selectedAnswerItem = null;
             bank.innerHTML = '';
+            bank.ondragover = event => event.preventDefault();
+            bank.ondrop = event => handleAnswerDrop(event, 'fasa1');
+            bank.onclick = event => {
+                if(!event.target.closest('[data-item-id]')) moveSelectedAnswerToBank('fasa1');
+            };
             slots.innerHTML = '';
 
-            let shuffled = [...fasa1Items].sort(() => Math.random() - 0.5);
+            const shuffled = shuffleItems(fasa1Items.map((text, index) => ({ text, itemId: `fasa1-${index}` })));
 
-            shuffled.forEach(text => {
-                bank.appendChild(createDraggableItem(text, 'fasa1'));
+            shuffled.forEach(({ text, itemId }) => {
+                bank.appendChild(createDraggableItem(text, 'fasa1', itemId));
             });
 
             for(let i=0; i<17; i++) {
                 const slot = document.createElement('div');
                 slot.className = "h-14 border-2 border-dashed border-slate-300 rounded-xl flex items-center px-4 bg-slate-50/50 text-sm text-slate-400 transition drop-target";
+                slot.dataset.slotIndex = String(i);
                 slot.addEventListener('dragover', e => e.preventDefault());
-                slot.addEventListener('drop', (e) => dropToSlotFasa1(e, slot));
+                slot.addEventListener('drop', e => dropToSlotFasa1(e, slot));
+                slot.addEventListener('click', () => moveSelectedAnswer('fasa1', slot));
                 slots.appendChild(slot);
             }
         }
 
-        function createDraggableItem(text, type) {
+        const arcadeStepColors = [
+            { bg: '#302249', text: '#e9ddff', accent: '#a78bfa' },
+            { bg: '#3b2d16', text: '#ffedbd', accent: '#fbbf24' },
+            { bg: '#3b202b', text: '#ffe1e8', accent: '#fb7185' },
+            { bg: '#15332e', text: '#d1fae5', accent: '#34d399' },
+            { bg: '#183244', text: '#d5f3ff', accent: '#38bdf8' }
+        ];
+
+        function styleArcadeStep(element, text, isChip = false) {
+            const itemIndex = Number(element.dataset.itemId?.match(/-(\d+)$/)?.[1]);
+            const stepIndex = Number.isInteger(itemIndex) ? itemIndex : Math.max(0, fasa1Items.indexOf(text));
+            const palette = arcadeStepColors[stepIndex % arcadeStepColors.length];
+            element.style.setProperty('--step-bg', palette.bg);
+            element.style.setProperty('--step-text', palette.text);
+            element.style.setProperty('--step-accent', palette.accent);
+            element.classList.add(isChip ? 'arcade-step-chip' : 'arcade-step');
+        }
+
+        let selectedAnswerItem = null;
+
+        function createDraggableItem(text, type, itemId) {
             const el = document.createElement('div');
-            el.className = "bg-white border border-slate-200 shadow-sm p-3 rounded-xl cursor-grab font-medium text-slate-700 hover:border-indigo-400 transition flex items-center justify-between text-xs";
+            el.className = "border shadow-sm p-3 rounded-xl cursor-grab font-medium hover:border-indigo-400 transition flex items-center justify-between text-xs";
             el.draggable = true;
             el.innerText = text;
             el.dataset.text = text;
+            el.dataset.itemId = itemId;
+            el.dataset.phase = type;
+            styleArcadeStep(el, text);
             el.addEventListener('dragstart', e => {
-                e.dataTransfer.setData('text/plain', text);
-                e.dataTransfer.setData('source-container', e.target.parentElement.id);
+                const sourceSlot = el.closest('.drop-target, .slot-box');
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    phase: type,
+                    itemId,
+                    sourceSlot: sourceSlot?.dataset.slotIndex ?? null
+                }));
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            el.addEventListener('click', event => {
+                event.stopPropagation();
+                const targetSlot = el.closest('.drop-target, .slot-box');
+                if(selectedAnswerItem && selectedAnswerItem.phase === type &&
+                    selectedAnswerItem.itemId !== itemId && targetSlot) {
+                    moveSelectedAnswer(type, targetSlot);
+                    return;
+                }
+                selectAnswerItem(el);
             });
             return el;
         }
 
-        function dropToSlotFasa1(e, slot) {
-            e.preventDefault();
-            const text = e.dataTransfer.getData('text/plain');
-            
-            if(slot.children.length > 0) {
-                const oldItem = slot.children[0];
-                document.getElementById('bank-fasa1').appendChild(createDraggableItem(oldItem.dataset.text, 'fasa1'));
-                slot.innerHTML = '';
+        function selectAnswerItem(item) {
+            document.querySelectorAll('.answer-item-selected').forEach(selected => selected.classList.remove('answer-item-selected'));
+            selectedAnswerItem = {
+                phase: item.dataset.phase,
+                itemId: item.dataset.itemId
+            };
+            item.classList.add('answer-item-selected');
+        }
+
+        function phaseAnswerElements(phase) {
+            return phase === 'fasa1'
+                ? { bank: document.getElementById('bank-fasa1'), slots: document.querySelectorAll('#slots-fasa1 > .drop-target') }
+                : { bank: document.getElementById('bank-fasa2'), slots: document.querySelectorAll('#slots-fasa2 .slot-box') };
+        }
+
+        function setAnswerItemLocation(item, phase, slotIndex = null) {
+            item.className = slotIndex === null
+                ? "border shadow-sm p-3 rounded-xl cursor-grab font-medium hover:border-indigo-400 transition flex items-center justify-between text-xs arcade-step"
+                : "text-xs font-medium cursor-grab arcade-step-chip";
+            item.dataset.phase = phase;
+            item.draggable = true;
+            styleArcadeStep(item, item.dataset.text, slotIndex !== null);
+            item.classList.remove('answer-item-selected');
+        }
+
+        function updateAnswerSlot(slot, item, phase) {
+            slot.replaceChildren();
+            if(item) {
+                const index = Number(slot.dataset.slotIndex);
+                setAnswerItemLocation(item, phase, index);
+                slot.appendChild(item);
+                slot.classList.add('has-answer');
+                slot.classList.remove('text-slate-400');
+                slot.classList.add('text-slate-800');
+                return;
+            }
+            slot.classList.remove('has-answer');
+            if(phase === 'fasa2') slot.textContent = 'Tarik pernyataan ke sini';
+        }
+
+        function handleAnswerDrop(event, phase, targetSlot = null) {
+            event.preventDefault();
+            let payload;
+            try {
+                payload = JSON.parse(event.dataTransfer.getData('text/plain'));
+            } catch(error) {
+                return;
+            }
+            if(payload.phase !== phase) return;
+            const { bank, slots } = phaseAnswerElements(phase);
+            const sourceIndex = payload.sourceSlot === null ? null : Number(payload.sourceSlot);
+            const sourceSlot = sourceIndex === null ? null : slots[sourceIndex];
+            const item = sourceSlot
+                ? sourceSlot.querySelector('[data-item-id]')
+                : [...bank.children].find(candidate => candidate.dataset.itemId === payload.itemId);
+            if(!item) return;
+
+            if(!targetSlot) {
+                if(!sourceSlot) return;
+                updateAnswerSlot(sourceSlot, null, phase);
+                setAnswerItemLocation(item, phase);
+                bank.appendChild(item);
+                selectedAnswerItem = null;
+                item.classList.remove('answer-item-selected');
+                return;
             }
 
-            const bankItems = document.querySelectorAll('#bank-fasa1 > div');
-            let removed = false;
-            bankItems.forEach(item => {
-                if(!removed && item.dataset.text === text) {
-                    item.remove();
-                    removed = true;
-                }
-            });
+            if(sourceSlot === targetSlot) return;
+            const displaced = targetSlot.querySelector('[data-item-id]');
+            if(sourceSlot) updateAnswerSlot(sourceSlot, displaced, phase);
+            else if(displaced) {
+                setAnswerItemLocation(displaced, phase);
+                bank.appendChild(displaced);
+            }
+            updateAnswerSlot(targetSlot, item, phase);
+            selectedAnswerItem = null;
+        }
 
-            slot.innerHTML = '';
-            const newItem = document.createElement('div');
-            newItem.className = "font-medium text-slate-800 text-xs";
-            newItem.innerText = text;
-            newItem.dataset.text = text;
-            slot.appendChild(newItem);
-            slot.className = "h-14 border-2 border-indigo-400 bg-indigo-50/30 rounded-xl flex items-center px-4 text-sm font-medium text-slate-800 transition drop-target";
+        function moveSelectedAnswer(phase, targetSlot) {
+            if(!selectedAnswerItem || selectedAnswerItem.phase !== phase) return;
+            const { bank, slots } = phaseAnswerElements(phase);
+            const sourceSlot = [...slots].find(slot => slot.querySelector(`[data-item-id="${selectedAnswerItem.itemId}"]`));
+            const item = sourceSlot
+                ? sourceSlot.querySelector('[data-item-id]')
+                : [...bank.children].find(candidate => candidate.dataset.itemId === selectedAnswerItem.itemId);
+            if(!item) return;
+            if(sourceSlot === targetSlot) return;
+            const displaced = targetSlot.querySelector('[data-item-id]');
+            if(sourceSlot) updateAnswerSlot(sourceSlot, displaced, phase);
+            else if(displaced) {
+                setAnswerItemLocation(displaced, phase);
+                bank.appendChild(displaced);
+            }
+            updateAnswerSlot(targetSlot, item, phase);
+            selectedAnswerItem = null;
+            document.querySelectorAll('.answer-item-selected').forEach(selected => selected.classList.remove('answer-item-selected'));
+        }
+
+        function moveSelectedAnswerToBank(phase) {
+            if(!selectedAnswerItem || selectedAnswerItem.phase !== phase) return;
+            const { bank, slots } = phaseAnswerElements(phase);
+            const sourceSlot = [...slots].find(slot => slot.querySelector(`[data-item-id="${selectedAnswerItem.itemId}"]`));
+            const item = sourceSlot?.querySelector('[data-item-id]');
+            if(!item) return;
+            updateAnswerSlot(sourceSlot, null, phase);
+            setAnswerItemLocation(item, phase);
+            bank.appendChild(item);
+            selectedAnswerItem = null;
+            item.classList.remove('answer-item-selected');
+        }
+
+        function dropToSlotFasa1(event, slot) {
+            handleAnswerDrop(event, 'fasa1', slot);
         }
 
         const expectedAnswers = [
@@ -2339,13 +3291,15 @@
         }
 
         function checkFasa1() {
-            fasa1Score = calculatePhaseScore('#slots-fasa1 > div');
-            fasa1Unlocked = true;
-            document.getElementById('lock-badge').className = "ml-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full";
-            document.getElementById('lock-badge').innerText = "🔓 Dibuka";
-            document.getElementById('fasa2-lock-overlay').style.display = "none";
-            showPopup("Fasa 1 Selesai", `Markah pseudokod: ${fasa1Score}/17. Fasa 2 Carta Alir kini dibuka.`, "Pergi ke Fasa 2", fasa1Score === 17, () => {
+            showConfirmationPopup("Yakin mahu hantar jawapan?", "Semak semula susunan pseudokod anda. Jika pilih hantar, Fasa 2 akan dibuka dan anda boleh teruskan ke carta alir.", "Ya, hantar jawapan", () => {
+                fasa1Score = calculatePhaseScore('#slots-fasa1 > div');
+                fasa1Unlocked = true;
+                document.getElementById('lock-badge').className = "ml-1 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full";
+                document.getElementById('lock-badge').innerText = "🔓 Dibuka";
+                document.getElementById('fasa2-lock-overlay').style.display = "none";
+                showPopup("Tahniah! Fasa 1 dihantar", `Markah pseudokod: ${fasa1Score}/17. Fasa 2 Carta Alir kini dibuka.`, "Pergi ke Fasa 2", true, () => {
                 switchPhase(2);
+                });
             });
         }
 
@@ -2353,21 +3307,19 @@
         function initFasa2() {
             const bank = document.getElementById('bank-fasa2');
             const slots = document.getElementById('slots-fasa2');
+            selectedAnswerItem = null;
             bank.innerHTML = '';
             slots.innerHTML = '';
 
-            let shuffledFasa2 = [...fasa1Items].sort(() => Math.random() - 0.5);
+            bank.onclick = event => {
+                if(!event.target.closest('[data-item-id]')) moveSelectedAnswerToBank('fasa2');
+            };
+            bank.ondragover = event => event.preventDefault();
+            bank.ondrop = event => handleAnswerDrop(event, 'fasa2');
+            const shuffledFasa2 = shuffleItems(fasa1Items.map((text, index) => ({ text, itemId: `fasa2-${index}` })));
 
-            shuffledFasa2.forEach(text => {
-                const el = document.createElement('div');
-                el.className = "bg-white border border-slate-200 shadow-sm p-3 rounded-xl cursor-grab font-medium text-slate-700 hover:border-indigo-400 text-xs";
-                el.draggable = true;
-                el.innerText = text;
-                el.dataset.text = text;
-                el.addEventListener('dragstart', e => {
-                    e.dataTransfer.setData('text/plain', text);
-                });
-                bank.appendChild(el);
+            shuffledFasa2.forEach(({ text, itemId }) => {
+                bank.appendChild(createDraggableItem(text, 'fasa2', itemId));
             });
 
             for(let i=0; i<17; i++) {
@@ -2380,56 +3332,29 @@
                         ${getShapeSvg(expShape)}
                         <span class="text-[9px] font-semibold text-slate-500 mt-0.5">${getShapeName(expShape)}</span>
                     </div>
-                    <div class="flex-grow h-12 border-2 border-dashed border-slate-300 rounded-xl flex items-center px-3 bg-slate-50/50 text-xs text-slate-400 slot-box">
+                    <div data-slot-index="${i}" class="flex-grow min-h-14 border-2 border-dashed border-slate-300 rounded-xl flex items-center px-3 py-2 bg-slate-50/50 text-xs text-slate-400 slot-box">
                         Tarik pernyataan ke sini
                     </div>
                 `;
 
                 const slotBox = row.querySelector('.slot-box');
                 slotBox.addEventListener('dragover', e => e.preventDefault());
-                slotBox.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const text = e.dataTransfer.getData('text/plain');
-
-                    if(slotBox.children.length > 0) {
-                        const oldText = slotBox.children[0].dataset.text;
-                        const returnEl = document.createElement('div');
-                        returnEl.className = "bg-white border border-slate-200 shadow-sm p-3 rounded-xl cursor-grab font-medium text-slate-700 hover:border-indigo-400 text-xs";
-                        returnEl.draggable = true;
-                        returnEl.innerText = oldText;
-                        returnEl.dataset.text = oldText;
-                        returnEl.addEventListener('dragstart', ev => ev.dataTransfer.setData('text/plain', oldText));
-                        document.getElementById('bank-fasa2').appendChild(returnEl);
-                        slotBox.innerHTML = '';
-                    }
-
-                    const bankItems = document.querySelectorAll('#bank-fasa2 > div');
-                    let removed = false;
-                    bankItems.forEach(item => {
-                        if(!removed && item.dataset.text === text) {
-                            item.remove();
-                            removed = true;
-                        }
-                    });
-
-                    slotBox.innerHTML = '';
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = "font-medium text-slate-800 text-xs";
-                    itemDiv.innerText = text;
-                    itemDiv.dataset.text = text;
-                    slotBox.appendChild(itemDiv);
-                    slotBox.className = "flex-grow h-12 border-2 border-indigo-400 bg-indigo-50/20 rounded-xl flex items-center px-3 text-xs font-semibold text-slate-800 slot-box";
-                });
+                slotBox.addEventListener('drop', event => handleAnswerDrop(event, 'fasa2', slotBox));
+                slotBox.addEventListener('click', () => moveSelectedAnswer('fasa2', slotBox));
 
                 slots.appendChild(row);
             }
         }
 
-        async function checkFasa2() {
+        function checkFasa2() {
             if(!fasa1Unlocked) {
                 showPopup("⚠️ Terkunci", "Sila selesaikan Fasa 1 terlebih dahulu.", "Tutup", false);
                 return;
             }
+            showConfirmationPopup("Yakin mahu hantar jawapan Fasa 2?", "Semak semula susunan carta alir anda. Selepas dihantar, markah akan dikira dan direkodkan.", "Ya, hantar jawapan", submitFasa2Answers);
+        }
+
+        async function submitFasa2Answers() {
             fasa2Score = calculatePhaseScore('#slots-fasa2 .slot-box');
             const totalScore = fasa1Score + fasa2Score;
             let saveMessage = "Rekod markah berjaya disimpan ke Supabase.";
@@ -2459,17 +3384,41 @@
         }
 
         let popupCallback = null;
+        function renderPopupConfetti() {
+            const confetti = document.getElementById('popup-confetti');
+            confetti.replaceChildren();
+            const colors = ['#fbbf24', '#f43f5e', '#a78bfa', '#34d399', '#38bdf8', '#f0abfc'];
+            for(let index = 0; index < 36; index++) {
+                const piece = document.createElement('span');
+                piece.style.setProperty('--confetti-left', `${Math.random() * 100}%`);
+                piece.style.setProperty('--confetti-color', colors[index % colors.length]);
+                piece.style.setProperty('--confetti-delay', `${Math.random() * .65}s`);
+                piece.style.setProperty('--confetti-drift', `${Math.round(Math.random() * 150 - 75)}px`);
+                confetti.appendChild(piece);
+            }
+        }
+
         function showPopup(title, desc, btnText, isSuccess, callback) {
             document.getElementById('popup-title').innerText = title;
             document.getElementById('popup-desc').innerText = desc;
             document.getElementById('popup-btn').innerText = btnText;
             document.getElementById('popup-icon').innerText = isSuccess ? "🎉" : "💡";
+            document.getElementById('popup-cancel-btn').classList.add('hidden');
+            document.getElementById('popup-confetti').replaceChildren();
+            if(isSuccess) renderPopupConfetti();
             document.getElementById('popup-modal').classList.remove('hidden');
             popupCallback = callback || null;
         }
 
+        function showConfirmationPopup(title, desc, confirmText, callback) {
+            showPopup(title, desc, confirmText, false, callback);
+            document.getElementById('popup-cancel-btn').classList.remove('hidden');
+        }
+
         function closePopup() {
             document.getElementById('popup-modal').classList.add('hidden');
+            document.getElementById('popup-cancel-btn').classList.add('hidden');
+            document.getElementById('popup-confetti').replaceChildren();
             popupCallback = null;
         }
 
@@ -2504,29 +3453,6 @@
                 document.getElementById('teacher-password-reset-error').classList.add('hidden');
                 document.getElementById('teacher-password-reset-modal').classList.remove('hidden');
             }
-        });
-
-        const colorSchemePreference = window.matchMedia('(prefers-color-scheme: dark)');
-
-        function applyTheme(theme, saveChoice = false) {
-            const isDark = theme === 'dark';
-            document.body.classList.toggle('theme-dark', isDark);
-            const button = document.getElementById('theme-toggle');
-            button.textContent = isDark ? '☀' : '☾';
-            button.setAttribute('aria-label', isDark ? 'Tukar ke tema cerah' : 'Tukar ke tema gelap');
-            button.title = isDark ? 'Tukar ke tema cerah' : 'Tukar ke tema gelap';
-            if(saveChoice) localStorage.setItem('portal-theme', theme);
-            if(typeof flightChart !== 'undefined' && flightChart) renderFlightChart();
-        }
-
-        function toggleTheme() {
-            applyTheme(document.body.classList.contains('theme-dark') ? 'light' : 'dark', true);
-        }
-
-        const savedTheme = localStorage.getItem('portal-theme');
-        applyTheme(savedTheme || (colorSchemePreference.matches ? 'dark' : 'light'));
-        colorSchemePreference.addEventListener('change', event => {
-            if(!localStorage.getItem('portal-theme')) applyTheme(event.matches ? 'dark' : 'light');
         });
 
         if('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
