@@ -31,7 +31,7 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
         @media (prefers-reduced-motion: reduce) {
-            .flight-panel-enter { animation: none !important; }
+            html:not(.motion-override) .flight-panel-enter { animation: none !important; }
         }
         :root {
             --page-bg: #120e16;
@@ -115,8 +115,6 @@
             .portal-choice { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
             .portal-choice:hover { transform: translateY(-4px); }
         }
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-
         :root {
             --page-bg: #120e16;
             --surface: #221a2c;
@@ -312,7 +310,7 @@
             align-items: start;
             gap: clamp(1rem, 2.2vw, 1.75rem);
         }
-        #portal-view > .home-hero, #other-category { grid-column: 1 / -1; }
+        #portal-view > .home-hero, #news-category, #other-category { grid-column: 1 / -1; }
         #ask-category { grid-column: 1 / span 8; }
         #games-category { grid-column: 9 / span 4; }
         #ask-category > div > .grid, #games-category > div > .grid { grid-template-columns: minmax(0, 1fr); }
@@ -398,7 +396,9 @@
         .home-hero aside > button:hover, body .portal-choice:hover, #teacher-home-view > div > button:hover {
             border-color: #a78bfa !important;
         }
-        .portal-choice { animation: arcade-card-glow 7s ease-in-out infinite alternate; }
+        .portal-choice {
+            animation: arcade-card-glow 7s ease-in-out infinite alternate, arcade-button-led 5.2s ease-in-out infinite;
+        }
         #teacher-home-view > div > button { animation: arcade-card-glow 7s ease-in-out infinite alternate; }
         #teacher-home-view > div > button:nth-child(2) { animation-delay: -3.5s; }
         #teacher-dashboard > header > button {
@@ -585,25 +585,376 @@
             0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74,222,128,.34); }
             50% { opacity: .72; box-shadow: 0 0 0 6px rgba(74,222,128,0); }
         }
+        body { position: relative; isolation: isolate; }
+        main.max-w-7xl { position: relative; z-index: 1; }
+        .arcade-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        #starfield-canvas {
+            z-index: 0;
+            opacity: .7;
+        }
+        #particle-canvas { z-index: 40; }
+        @keyframes arcade-icon-drift {
+            0%, 100% { transform: translateY(0) rotate(-3deg); }
+            50% { transform: translateY(-4px) rotate(3deg); }
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(.8deg); }
+        }
+        .animate-float-delayed { animation: floating 5s ease-in-out 1.5s infinite; }
+        .animate-float-delayed:focus-within { animation-play-state: paused; }
+        @media (hover: hover) {
+            .animate-float-delayed:hover { animation-play-state: paused; }
+        }
+        @keyframes arcade-neon-flicker {
+            0%, 18%, 20%, 22%, 55%, 57%, 100% {
+                text-shadow: 0 0 7px rgba(251,191,36,.76), 0 0 20px rgba(251,191,36,.38), 0 0 34px rgba(244,63,94,.22);
+            }
+            19%, 21%, 56% { text-shadow: 0 0 3px rgba(251,191,36,.22); }
+        }
+        @keyframes arcade-button-led {
+            0%, 100% { filter: drop-shadow(0 0 0 rgba(251,191,36,0)); }
+            50% { filter: drop-shadow(0 0 4px rgba(251,191,36,.22)); }
+        }
+        button:not(:disabled) { animation: arcade-button-led 5.2s ease-in-out infinite; }
+        .home-hero h2 {
+            font-family: 'Syne', 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(2.45rem, 6.2vw, 5rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -.055em;
+            animation: arcade-neon-flicker 5.8s ease-in-out infinite;
+        }
+        .text-xs { font-size: .8125rem !important; line-height: 1.5; }
+        .font-pixel { font-size: .58rem !important; }
+        .arcade-pulse { animation-duration: .9s; }
+        .arcade-icon,
+        .game-icon,
+        .portal-choice > span.text-2xl,
+        #portal-view summary > span:first-child > span:first-child,
+        #game-result > div:first-child,
+        #popup-icon,
+        #lock-badge,
+        #nav-breadcrumb::before {
+            animation: arcade-icon-drift 2.7s ease-in-out infinite;
+        }
+        .arcade-icon { display: inline-flex; transform-origin: center; }
+        button:not(:disabled) svg,
+        a svg,
+        summary svg {
+            transform-origin: center;
+            transition: transform .24s ease, filter .24s ease;
+        }
+        @media (hover: hover) {
+            button:not(:disabled):hover {
+                box-shadow: 0 8px 22px rgba(251,191,36,.2), 0 0 16px rgba(251,191,36,.13);
+            }
+            button:not(:disabled):not(#arcade-car-container):hover {
+                animation: none;
+                filter: brightness(1.05) drop-shadow(0 0 7px rgba(251,191,36,.3));
+            }
+            button:not(:disabled):hover svg,
+            button:not(:disabled):hover .game-icon,
+            button:not(:disabled):hover .arcade-icon {
+                animation: none;
+                transform: translateY(-2px) rotate(-7deg) scale(1.08);
+                filter: drop-shadow(0 0 6px rgba(251,191,36,.65));
+            }
+            summary:hover, a:hover,
+            button.hover\:underline:not(:disabled):hover,
+            button[aria-label="Tutup"]:not(:disabled):hover,
+            #module-linear-search .border-b button:not(:disabled):hover,
+            :is(#module-linear-search, #mind-games-view, #teacher-flights-view, #teacher-records-view, #teacher-login-modal) button.hover\:underline:not(:disabled):hover {
+                color: #fff !important;
+                box-shadow: none !important;
+                filter: none !important;
+                transform: none !important;
+            }
+            #module-linear-search .border-b :is(#tab-fasa1, #tab-fasa2):hover {
+                color: #fff !important;
+            }
+            summary:hover span:not(.arcade-icon) {
+                color: #fbbf24 !important;
+            }
+            .category-group > summary:hover .category-chevron { transform: none; }
+        }
+        .home-hero aside > button,
+        #teacher-home-view > div > button,
+        #teacher-dashboard > header > button {
+            animation: arcade-card-glow 3.8s ease-in-out infinite alternate, arcade-button-led 5.2s ease-in-out infinite;
+        }
+        .flight-tab[aria-selected="true"] {
+            animation: arcade-card-glow 4.5s ease-in-out infinite alternate, arcade-button-led 5.2s ease-in-out infinite;
+        }
+        .portal-choice:not(:disabled) {
+            animation: arcade-card-glow 7s ease-in-out infinite alternate, arcade-button-led 5.2s ease-in-out infinite;
+        }
+        .home-hero aside > button:not(:disabled),
+        #teacher-home-view > div > button:not(:disabled),
+        #teacher-dashboard > header > button:not(:disabled) {
+            animation: arcade-card-glow 3.8s ease-in-out infinite alternate, arcade-button-led 5.2s ease-in-out infinite;
+        }
+        button.flight-tab[aria-selected="true"]:not(:disabled) {
+            animation: arcade-card-glow 4.5s ease-in-out infinite alternate, arcade-button-led 5.2s ease-in-out infinite;
+        }
+        #teacher-flights-view > div:first-child {
+            padding: 1.25rem 1.5rem;
+            border: 1px solid #674a81;
+            border-radius: 1rem;
+            background: linear-gradient(120deg, #342044, #221a2c 65%, #38243b);
+        }
+        #teacher-flights-view > div:first-child h3 { color: #fbbf24 !important; }
+        #teacher-home-view h3, #flight-form-title { color: #fbbf24 !important; }
+        #flight-form label {
+            color: #f0abfc !important;
+            font-weight: 700;
+        }
+        #flight-form .grid > label:nth-child(3n + 2) { color: #fcd34d !important; }
+        #flight-form .grid > label:nth-child(3n) { color: #7dd3fc !important; }
+        #flight-form legend { color: #fbbf24 !important; }
+        #flight-form input, #flight-form select, #flight-form textarea,
+        #fl-route-filter {
+            background: #17101f;
+            border-color: #8561a4;
+            color: #fff;
+            font-weight: 600;
+            transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+        }
+        #flight-form input:focus, #flight-form select:focus, #flight-form textarea:focus,
+        #fl-route-filter:focus {
+            border-color: #fbbf24;
+            background: #261b34;
+            box-shadow: 0 0 0 3px rgba(251,191,36,.2), 0 0 18px rgba(251,191,36,.13);
+            outline: none;
+        }
+        #flight-form input::placeholder, #flight-form textarea::placeholder { color: #c4b5d8; opacity: 1; }
+        #flight-form fieldset { border-color: #9c68a9; }
+        #flight-chart-panel > div:first-child {
+            border: 1px solid #674a81;
+            box-shadow: 0 18px 38px rgba(5,3,10,.35), inset 0 1px rgba(251,191,36,.12);
+        }
+        #flight-chart-panel label { color: #fcd34d !important; font-weight: 700; }
+        #flight-chart-legend { padding: .5rem 0; }
+        #flight-chart-legend .airline-legend-item {
+            padding: .35rem;
+            border: 1px solid #674a81;
+            border-radius: .75rem;
+            background: #1b1423;
+        }
+        #flight-chart-currency-options .currency-chip[aria-pressed="true"] {
+            box-shadow: 0 0 18px rgba(251,191,36,.35);
+        }
+        .motion-toggle {
+            padding: .4rem .65rem;
+            border: 1px solid #fbbf24;
+            border-radius: .65rem;
+            background: #352340;
+            color: #ffe295;
+            font: 700 .75rem/1.3 'Plus Jakarta Sans', sans-serif;
+        }
+        #teacher-dashboard > header,
+        #flight-form fieldset,
+        #flight-chart-panel > div:first-child {
+            animation: dashboard-aurora 5s ease-in-out infinite alternate;
+            transition: border-color .25s ease, box-shadow .25s ease;
+        }
+        #flight-form fieldset:nth-child(2) { animation-delay: -2.5s; }
+        @keyframes dashboard-aurora {
+            from { border-color: #785599; box-shadow: 0 8px 24px rgba(5,3,10,.3), inset 0 0 18px rgba(167,139,250,.06); }
+            to { border-color: #d69e55; box-shadow: 0 10px 30px rgba(244,63,94,.12), inset 0 0 24px rgba(251,191,36,.12); }
+        }
+        #teacher-flights-view .flight-tab {
+            min-height: 3.4rem;
+            border-radius: 1rem !important;
+            border: 1px solid #7956a0 !important;
+            background: #291d3a !important;
+            color: #dfd0fa !important;
+            font: 800 .95rem/1.2 'Syne', 'Plus Jakarta Sans', sans-serif;
+        }
+        #teacher-flights-view .flight-tab[data-flight-tab="form"] { border-color: #bd6385 !important; color: #ffbdd0 !important; }
+        #teacher-flights-view .flight-tab[data-flight-tab="list"] { border-color: #5998aa !important; color: #a7e7f6 !important; }
+        #teacher-flights-view .flight-tab[aria-selected="true"] {
+            background: #fbbf24 !important;
+            border-color: #ffe08a !important;
+            color: #241528 !important;
+            box-shadow: 0 6px 20px rgba(251,191,36,.35);
+        }
+        #teacher-flights-view .flight-tab[aria-selected="true"][data-flight-tab="form"] {
+            background: #fb8eaa !important;
+            border-color: #ffc1d1 !important;
+            color: #351322 !important;
+        }
+        #teacher-flights-view .flight-tab[aria-selected="true"][data-flight-tab="list"] {
+            background: #7dd3e6 !important;
+            border-color: #c1f3fc !important;
+            color: #123040 !important;
+        }
+        #teacher-flights-view .currency-chip { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; }
+        #flight-list-panel thead tr { animation: dashboard-table-glow 5s ease-in-out infinite alternate; }
+        @keyframes dashboard-table-glow {
+            from { background-color: #342448; }
+            to { background-color: #49304c; }
+        }
+        #flight-list-panel th { color: #e8d8ff; }
+        #flight-list-panel th:nth-child(3n + 2) { color: #ffe095; }
+        #flight-list-panel th:nth-child(3n) { color: #ffb6cf; }
+        #flight-table-body td { color: #e9dff5 !important; }
+        #flight-table-body td:nth-child(2),
+        #flight-table-body td:nth-child(5),
+        #flight-table-body td:nth-child(6) { color: #a5e3f5 !important; }
+        #flight-table-body td:nth-child(4) { color: #e5c4ff !important; font-weight: 700; }
+        #flight-table-body td:nth-child(7) { color: #ffdf86 !important; font-weight: 800; }
+        #flight-table-body td:nth-child(8) { color: #ffc1d4 !important; }
+        #flight-table-body td:nth-child(9) { color: #a6f1d1 !important; }
+        #flight-table-body tr { transition: background-color .25s ease, box-shadow .25s ease; }
+        .monitor-panel {
+            padding: 1.2rem;
+            border: 1px solid #7956a0;
+            border-radius: 1rem;
+            background: #251b32;
+        }
+        .monitor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .75rem; }
+        .monitor-card { padding: .9rem; border: 1px solid #674a81; border-radius: .8rem; background: #1b1423; }
+        .monitor-card h4 { color: #ffdf86; font-weight: 800; }
+        .monitor-card p { color: #e7dbee; margin-top: .35rem; }
+        .monitor-panel a { color: #a5e3f5; text-decoration: underline; }
+        @media (hover: hover) {
+            #teacher-dashboard > header:hover,
+            #flight-form fieldset:hover,
+            #flight-chart-panel > div:first-child:hover {
+                animation-play-state: paused;
+                border-color: #fbbf24;
+                box-shadow: 0 10px 32px rgba(251,191,36,.24);
+            }
+            #flight-table-body tr:hover { background: #3b294d; box-shadow: inset 4px 0 #fbbf24; }
+            #flight-form input:hover, #flight-form select:hover, #flight-form textarea:hover {
+                border-color: #fbbf24 !important;
+                box-shadow: 0 0 12px rgba(251,191,36,.18);
+            }
+        }
+        .news-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; }
+        .news-controls label { color: #f0abfc; font-weight: 700; }
+        .news-controls select {
+            display: block;
+            min-height: 2.75rem;
+            margin-top: .25rem;
+            padding: .5rem .75rem;
+            border: 1px solid #8561a4;
+            border-radius: .7rem;
+            background: #17101f;
+            color: #fff;
+        }
+        .news-refresh {
+            min-height: 2.75rem;
+            padding: .55rem 1rem;
+            border: 1px solid #fbbf24;
+            border-radius: .7rem;
+            background: #fbbf24;
+            color: #120e16;
+            font-weight: 800;
+        }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .8rem; }
+        .news-card {
+            display: flex;
+            flex-direction: column;
+            gap: .6rem;
+            min-width: 0;
+            padding: 1rem;
+            border: 1px solid #674a81;
+            border-radius: .9rem;
+            background: #120e16;
+            text-decoration: none;
+            transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+            animation: flight-panel-enter .45s ease both;
+        }
+        .news-card:nth-child(3n + 2) { border-color: #9c526f; }
+        .news-card:nth-child(3n) { border-color: #4a8298; }
+        .news-card strong { color: #f5f2fa; overflow-wrap: anywhere; }
+        .news-card small { color: #d3c4f1; }
+        .news-card-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .35rem; color: #fbbf24; font-size: .75rem; font-weight: 700; }
+        @media (hover: hover) {
+            a.news-card:hover {
+                transform: translateY(-3px) !important;
+                border-color: #fbbf24;
+                box-shadow: 0 8px 22px rgba(251,191,36,.18) !important;
+            }
+            a.news-card:hover strong { color: #fbbf24; }
+        }
+        @keyframes arcade-card-glow {
+            from { box-shadow: 0 6px 20px rgba(5,3,10,.3), 0 0 0 rgba(251,191,36,0); }
+            to { box-shadow: 0 9px 24px rgba(5,3,10,.42), 0 0 18px rgba(251,191,36,.17); }
+        }
+        #arcade-car-container {
+            position: fixed;
+            bottom: 12px;
+            left: 0;
+            z-index: 40;
+            width: 64px;
+            height: 44px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            filter: drop-shadow(0 0 12px rgba(244,63,94,.9));
+            animation: arcade-car-drive 12s linear infinite;
+            cursor: pointer;
+        }
+        #arcade-car-container:hover {
+            filter: drop-shadow(0 0 12px rgba(244,63,94,.9));
+            box-shadow: none;
+        }
+        #arcade-car-container svg { width: 64px; height: 40px; }
+        #car-boost-popup {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            padding: .3rem .5rem;
+            border: 1px solid #fbbf24;
+            border-radius: .4rem;
+            background: #120e16;
+            color: #fbbf24;
+            font: 700 .7rem/1.4 'Space Mono', monospace;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        @keyframes arcade-car-drive {
+            from { transform: translateX(-120px); }
+            to { transform: translateX(calc(100vw + 120px)); }
+        }
         @media (max-width: 800px) {
             #ask-category, #games-category { grid-column: 1 / -1; }
         }
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+            html:not(.motion-override), html:not(.motion-override) *, html:not(.motion-override) *::before, html:not(.motion-override) *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+            html:not(.motion-override) #arcade-car-container { animation: none !important; left: 12px; }
         }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+    <canvas id="starfield-canvas" class="arcade-canvas" aria-hidden="true"></canvas>
+    <canvas id="particle-canvas" class="arcade-canvas" aria-hidden="true"></canvas>
 
     <!-- Navbar -->
     <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto w-full px-4 py-3 sm:py-4 flex flex-col lg:flex-row lg:justify-between items-start sm:items-center gap-3">
             <h1 class="w-full min-w-0 text-lg sm:text-xl font-bold flex items-center gap-2 cursor-pointer leading-snug" onclick="goToPortal()">
-                🌐 Hub Pembelajaran & Latihan Interaktif
+                <span class="arcade-icon" aria-hidden="true">🌐</span> Hub Pembelajaran & Latihan Interaktif
             </h1>
-            <div class="w-full lg:w-auto flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
+            <div class="w-full lg:w-auto flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3">
+                <span class="font-mono-arcade text-xs text-amber-400 whitespace-nowrap" aria-live="polite">NITRO: <span id="player-xp">0 XP</span></span>
+                <button id="motion-toggle" type="button" class="hidden motion-toggle" aria-pressed="false" title="Tetapan peranti mengurangkan animasi">Hidupkan animasi</button>
                 <button onclick="openTeacherAdmin()" class="shrink-0 text-[11px] sm:text-xs bg-indigo-700 hover:bg-indigo-800 text-white px-2.5 sm:px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 whitespace-nowrap">
-                    📊 Panel Guru
+                    <span class="arcade-icon" aria-hidden="true">📊</span> Panel Guru
                 </button>
                 <div id="nav-breadcrumb" role="status" aria-live="polite" class="text-xs px-3 py-1.5 rounded-full hidden md:block">
                     Halaman Utama
@@ -614,6 +965,17 @@
 
     <!-- Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+        <button id="arcade-car-container" type="button" onclick="boostCar()" aria-label="Aktifkan nitro kereta dan dapatkan 100 XP" title="Klik untuk Supersonic Boost!">
+            <span id="car-boost-popup" class="hidden">⚡ NITRO BOOST! +100 XP</span>
+            <svg viewBox="0 0 64 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="10" y="14" width="44" height="10" rx="3" fill="#F43F5E"/>
+                <rect x="18" y="8" width="24" height="8" rx="2" fill="#38BDF8"/>
+                <rect x="4" y="16" width="10" height="4" fill="#FBBF24"/>
+                <circle cx="16" cy="24" r="5" fill="#120E16" stroke="#FBBF24" stroke-width="2"/>
+                <circle cx="48" cy="24" r="5" fill="#120E16" stroke="#FBBF24" stroke-width="2"/>
+                <path d="M0 18H8" stroke="#FBBF24" stroke-width="2" stroke-dasharray="2 2" class="animate-pulse"/>
+            </svg>
+        </button>
 
         <!-- MODAL / BORANG NAMA & KELAS -->
         <div id="student-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4" onclick="handleBackdropClick(event)">
@@ -659,7 +1021,7 @@
                     </div>
                     <button type="button" onclick="closeTeacherLogin()" aria-label="Tutup" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
                 </div>
-                <label class="block text-xs font-semibold text-slate-700">E-mel akaun Supabase Auth
+                <label class="block text-xs font-semibold text-slate-700">E-mel akaun
                     <input id="teacher-email" type="email" autocomplete="username" placeholder="nama@example.com" class="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" required>
                 </label>
                 <label class="block text-xs font-semibold text-slate-700">Password
@@ -714,34 +1076,57 @@
                 <h3 class="text-lg font-bold text-slate-900">Alat Guru</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button type="button" onclick="openTeacherRecords()" class="text-left bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-2xl p-5 transition">
-                        <span class="text-2xl">📊</span>
+                        <span class="text-2xl arcade-icon" aria-hidden="true">📊</span>
                         <h4 class="font-bold text-slate-900 mt-3">Rekod Pelajar · <span class="text-amber-400">Modul 1</span></h4>
                         <p class="text-sm text-slate-600 mt-1">Semak markah, kemas kini atau eksport rekod.</p>
                         <span class="inline-block text-sm font-semibold text-indigo-700 mt-4">Buka rekod →</span>
                     </button>
                     <button type="button" onclick="openTeacherFlights()" class="text-left bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-2xl p-5 transition">
-                        <span class="text-2xl">✈️</span>
+                        <span class="text-2xl arcade-icon" aria-hidden="true">✈️</span>
                         <h4 class="font-bold text-slate-900 mt-3">Penjejak Harga <span class="text-rose-400">Tiket</span></h4>
                         <p class="text-sm text-slate-600 mt-1">Catat harga penerbangan dan lihat graf naik turun harga.</p>
                         <span class="inline-block text-sm font-semibold text-indigo-700 mt-4">Buka penjejak →</span>
                     </button>
                     <div class="bg-slate-100 border border-slate-200 rounded-2xl p-5 opacity-75">
-                        <span class="text-2xl">🗂️</span>
+                        <span class="text-2xl arcade-icon" aria-hidden="true">🗂️</span>
                         <h4 class="font-bold text-slate-800 mt-3">Pengurusan modul</h4>
                         <p class="text-sm text-slate-600 mt-1">Ruang untuk modul guru yang akan ditambah.</p>
                     </div>
                 </div>
+                <section class="monitor-panel space-y-3" aria-labelledby="monitor-heading">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h3 id="monitor-heading" class="text-lg font-bold">Keselamatan &amp; Supabase</h3>
+                            <p class="text-sm text-slate-300">Status automasi GitHub; waktu dipaparkan dalam waktu Malaysia.</p>
+                        </div>
+                        <button type="button" onclick="refreshMonitoringStatus()" class="bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Muat semula status</button>
+                    </div>
+                    <div class="monitor-grid">
+                        <div class="monitor-card">
+                            <h4>Semakan keselamatan harian</h4>
+                            <p id="security-monitor-status" role="status">Memuatkan status...</p>
+                            <a href="https://github.com/cgazri/portal/actions/workflows/security-check.yml" target="_blank" rel="noopener noreferrer">Lihat semakan di GitHub ↗</a>
+                        </div>
+                        <div class="monitor-card">
+                            <h4>Aktiviti Supabase · Selasa</h4>
+                            <p id="supabase-monitor-status" role="status">Memuatkan status...</p>
+                            <a href="https://github.com/cgazri/portal/actions/workflows/supabase-activity.yml" target="_blank" rel="noopener noreferrer">Lihat aktiviti di GitHub ↗</a>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-300">Semakan mengenal pasti rahsia dan malware yang diketahui dalam repositori, bukan semua ancaman atau kebocoran. Status berjaya bukan bukti tiada serangan. Untuk log sebenar, semak <a href="https://supabase.com/dashboard/project/svvaipcdqlgrgqdplykz/logs/explorer" target="_blank" rel="noopener noreferrer">log Supabase ↗</a> dan tetapan keselamatan GitHub.</p>
+                    <p class="text-sm text-slate-300">Aktiviti Supabase memerlukan fungsi SQL dipasang sekali melalui SQL Editor. <a href="https://github.com/cgazri/portal/blob/main/docs/security-monitoring.md" target="_blank" rel="noopener noreferrer">Panduan pemasangan ↗</a> Permintaan mingguan tidak menjamin projek percuma tidak dijeda. GitHub juga boleh melewatkan atau melumpuhkan jadual; semak status dan e-mel amaran Supabase.</p>
+                </section>
             </section>
 
             <section id="teacher-flights-view" class="hidden space-y-4">
                 <div class="border-b border-slate-200 pb-4">
                     <button type="button" onclick="showTeacherHome()" class="text-sm text-indigo-700 font-semibold hover:underline">← Dashboard Guru</button>
-                    <h3 class="text-xl font-bold text-slate-900 mt-2">✈️ Penjejak Harga Tiket</h3>
+                    <h3 class="text-xl font-bold text-slate-900 mt-2"><span class="arcade-icon" aria-hidden="true">✈️</span> Penjejak Harga Tiket</h3>
                 </div>
                 <div class="grid grid-cols-3 gap-2 max-w-xl" role="tablist" aria-label="Paparan penjejak harga tiket">
-                    <button type="button" role="tab" data-flight-tab="chart" onclick="setFlightTab('chart')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2">📈 Graf</button>
-                    <button type="button" role="tab" data-flight-tab="form" onclick="setFlightTab('form')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2">📝 Isi Data</button>
-                    <button type="button" role="tab" data-flight-tab="list" onclick="setFlightTab('list')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2">📋 Senarai</button>
+                    <button type="button" role="tab" data-flight-tab="chart" onclick="setFlightTab('chart')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2"><span class="arcade-icon" aria-hidden="true">📈</span> Graf</button>
+                    <button type="button" role="tab" data-flight-tab="form" onclick="setFlightTab('form')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2"><span class="arcade-icon" aria-hidden="true">📝</span> Isi Data</button>
+                    <button type="button" role="tab" data-flight-tab="list" onclick="setFlightTab('list')" class="flight-tab touch-target rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold px-2"><span class="arcade-icon" aria-hidden="true">📋</span> Senarai</button>
                 </div>
                 <p id="flight-error" class="hidden text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3" role="alert"></p>
 
@@ -900,6 +1285,7 @@
                             <p class="text-[11px] font-semibold uppercase tracking-[.14em] text-slate-500">Mata wang paparan</p>
                             <div id="flight-chart-currency-options" class="flex flex-wrap gap-2" role="group" aria-label="Pilih mata wang untuk graf"></div>
                         </div>
+                        <p class="text-xs text-slate-500">Titik pada tarikh yang sama berkongsi kedudukan mendatar. Klik titik untuk melihat rekodnya.</p>
                         <div class="relative h-72 sm:h-96"><canvas id="flight-chart" aria-label="Graf perubahan harga tiket mengikut tarikh"></canvas></div>
                         <p id="flight-chart-empty" class="hidden text-center text-sm text-slate-500">Belum ada data. Isi data dahulu di tab Isi Data.</p>
                         <p class="text-xs text-slate-500">Kadar tukaran daripada <a href="https://exchangerate.fun/" target="_blank" rel="noopener noreferrer" class="underline">ExchangeRate.fun</a> (dikemas kini setiap jam); nilai ialah anggaran dan kadar bank/kad mungkin berbeza. Setiap garisan membandingkan syarikat dan lapangan terbang asal untuk destinasi yang dipilih. Klik titik untuk lihat butiran.</p>
@@ -984,11 +1370,11 @@
 
             <details id="ask-category" class="category-group space-y-4 reveal" open>
                 <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
-                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl">💻</span><span class="text-lg sm:text-xl font-bold text-slate-900">Asas Sains Komputer (ASK) <span class="text-amber-400">Tingkatan 3</span></span></span>
+                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl arcade-icon" aria-hidden="true">💻</span><span class="text-lg sm:text-xl font-bold text-slate-900">Asas Sains Komputer (ASK) <span class="text-amber-400">Tingkatan 3</span></span></span>
                     <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
                 </summary>
                 <div class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4">
+                    <div class="grid grid-cols-1 gap-4 animate-float-delayed">
                         <button type="button" onclick="promptStudentInfo('linear-search')" class="portal-choice w-full text-left bg-white p-5 sm:p-6 rounded-2xl shadow-sm border-2 border-indigo-500 hover:shadow-md transition flex flex-col justify-between group">
                             <span class="font-pixel bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full self-start">Bab 3: Algoritma</span>
                             <h3 class="text-lg font-bold text-slate-900 mt-3 group-hover:text-indigo-600 transition">Modul 1: <span class="text-amber-400">Algoritma</span> <span class="text-rose-400">Carian Linear</span></h3>
@@ -1012,13 +1398,13 @@
 
             <details id="games-category" class="category-group space-y-4 reveal" open>
                 <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
-                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl">🧠</span><span class="text-lg sm:text-xl font-bold text-slate-900">Permainan <span class="text-rose-400">Minda</span></span></span>
+                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl arcade-icon" aria-hidden="true">🧠</span><span class="text-lg sm:text-xl font-bold text-slate-900">Permainan <span class="text-rose-400">Minda</span></span></span>
                     <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
                 </summary>
                 <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 animate-float-delayed">
                         <button type="button" onclick="openMindGames('flags')" class="portal-choice w-full text-left bg-white p-5 rounded-2xl border border-indigo-300 hover:border-indigo-500 hover:shadow-md transition">
-                            <span class="text-2xl">🌍</span>
+                            <span class="text-2xl arcade-icon" aria-hidden="true">🌍</span>
                             <h3 class="font-bold text-slate-900 mt-3">Bendera Dunia</h3>
                             <p class="text-slate-600 text-sm mt-1">Kenal pasti bendera negara secara rawak.</p>
                             <span class="inline-block mt-4 text-sm font-semibold text-indigo-700">Main sekarang →</span>
@@ -1036,7 +1422,7 @@
                                 <p class="text-xs text-slate-600 mt-1">Fakta negara, sejarah dan geografi.</p>
                             </button>
                             <button type="button" onclick="openMindGames('logic')" class="text-left rounded-xl border border-slate-200 p-4 hover:border-amber-400 transition">
-                                <span class="text-xl">🔢</span><h4 class="font-bold text-slate-900 mt-2">Corak Logik</h4>
+                                <span class="text-xl arcade-icon" aria-hidden="true">🔢</span><h4 class="font-bold text-slate-900 mt-2">Corak Logik</h4>
                                 <p class="text-xs text-slate-600 mt-1">Cari aturan nombor dan pola.</p>
                             </button>
                         </div>
@@ -1044,9 +1430,36 @@
                 </div>
             </details>
 
+            <details id="news-category" class="category-group space-y-4 reveal">
+                <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
+                    <span class="flex items-center gap-2 min-w-0"><span class="text-xl arcade-icon" aria-hidden="true">📰</span><span class="text-lg sm:text-xl font-bold text-slate-900">Berita <span class="text-amber-400">Terkini</span></span></span>
+                    <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
+                </summary>
+                <div class="space-y-4">
+                    <p class="text-sm text-slate-600">Tajuk 24 jam terkini daripada Bernama, Astro Awani, Berita Harian, Reuters dan AP News melalui Google News dan RSS2JSON. Artikel dibuka melalui Google News; semak laporan lain untuk mendapatkan perspektif berbeza. Topik ditentukan berdasarkan perkataan dalam tajuk.</p>
+                    <p class="text-xs text-slate-500">Membuka kategori ini membuat permintaan ke RSS2JSON; perkhidmatan tersebut menerima alamat IP pelawat. Ketersediaan dan kandungan bergantung pada suapan dan cache pihak ketiga.</p>
+                    <div class="news-controls">
+                        <label for="news-filter">Topik
+                            <select id="news-filter">
+                                <option value="all">Semua topik</option>
+                                <option value="world">Dunia &amp; geopolitik</option>
+                                <option value="defence">Pertahanan &amp; keselamatan siber</option>
+                                <option value="tech">AI &amp; teknologi</option>
+                                <option value="health">Kesihatan</option>
+                                <option value="culture">Malaysia &amp; budaya</option>
+                                <option value="sport">Sukan</option>
+                            </select>
+                        </label>
+                        <button id="news-refresh" type="button" class="news-refresh">↻ Muat semula berita</button>
+                    </div>
+                    <p id="news-status" class="text-sm text-slate-600" role="status" aria-live="polite">Buka kategori untuk memuatkan berita.</p>
+                    <div id="news-list" class="news-grid"></div>
+                </div>
+            </details>
+
             <details id="other-category" class="category-group space-y-4 opacity-80 reveal">
                 <summary class="flex items-center justify-between gap-3 border-b border-slate-200 pb-3 cursor-pointer">
-                    <span class="flex items-center gap-2"><span class="text-xl">📚</span><span class="text-lg sm:text-xl font-bold text-slate-900">Kategori Utama Lain</span></span>
+                    <span class="flex items-center gap-2"><span class="text-xl arcade-icon" aria-hidden="true">📚</span><span class="text-lg sm:text-xl font-bold text-slate-900">Kategori Utama Lain</span></span>
                     <span class="category-chevron shrink-0 text-xl text-slate-500 transition-transform">⌄</span>
                 </summary>
                 <div class="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-center text-sm text-slate-500">Kategori dan modul interaktif baharu akan ditambah dari semasa ke semasa.</div>
@@ -1060,7 +1473,7 @@
                     <h2 class="text-2xl font-bold text-slate-900">Modul 1: <span class="text-amber-400">Carian Linear</span> (Linear Search)</h2>
                     <p class="text-slate-600 text-sm mt-1">Pelajar: <span id="display-student" class="font-bold text-indigo-600"></span> | Senarai data: <code class="bg-slate-100 px-2 py-0.5 rounded text-indigo-600 font-semibold">L = [23, 99, 1, 54, 73, 21]</code>. Cari nilai <code class="bg-slate-100 px-2 py-0.5 rounded text-indigo-600 font-semibold">j = 3</code></p>
                 </div>
-                <button onclick="resetModule()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2">🔄 Reset Semula</button>
+                <button onclick="resetModule()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2"><span class="arcade-icon" aria-hidden="true">🔄</span> Reset Semula</button>
             </div>
             <div class="flex border-b border-slate-200 gap-4">
                 <button id="tab-fasa1" onclick="switchPhase(1)" class="pb-3 font-semibold text-indigo-600 border-b-2 border-indigo-600 transition">Fasa 1: Susun Pseudokod</button>
@@ -1069,11 +1482,11 @@
             <div id="view-fasa1" class="space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-900 mb-4 flex items-center justify-between"><span>📦 Bank Pilihan Langkah</span>                        <span class="text-xs text-slate-500 font-normal">Tarik ke petak, atau pilih langkah kemudian tekan petak</span></h3>
+                        <h3 class="font-bold text-slate-900 mb-4 flex items-center justify-between"><span><span class="arcade-icon" aria-hidden="true">📦</span> Bank Pilihan Langkah</span>                        <span class="text-xs text-slate-500 font-normal">Tarik ke petak, atau pilih langkah kemudian tekan petak</span></h3>
                         <div id="bank-fasa1" class="space-y-2.5 max-h-[380px] overflow-y-auto p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300"><!-- Diisi JS --></div>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-900 mb-4">📋 Ruang Susunan Pseudokod (1 - 17)</h3>
+                        <h3 class="font-bold text-slate-900 mb-4"><span class="arcade-icon" aria-hidden="true">📋</span> Ruang Susunan Pseudokod (1 - 17)</h3>
                         <div id="slots-fasa1" class="space-y-2.5 max-h-[450px] overflow-y-auto p-2"><!-- Diisi JS --></div>
                         <div class="mt-6 flex gap-4"><button onclick="checkFasa1()" class="flex-grow bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition shadow-sm">Semak & Hantar Jawapan Fasa 1</button></div>
                     </div>
@@ -1081,14 +1494,14 @@
             </div>
             <div id="view-fasa2" class="hidden space-y-6">
                 <div id="fasa2-lock-overlay" class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-amber-800 text-sm flex items-center justify-between">
-                    <span>⚠️ Sila selengkapkan dan semak Fasa 1 (Pseudokod) dengan betul terlebih dahulu untuk membuka kebenaran menyusun Carta Alir.</span>
+                    <span><span class="arcade-icon" aria-hidden="true">⚠️</span> Sila selengkapkan dan semak Fasa 1 (Pseudokod) dengan betul terlebih dahulu untuk membuka kebenaran menyusun Carta Alir.</span>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                     <!-- Bank Pernyataan Fasa 2 -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-bold text-slate-900 mb-4 flex items-center justify-between">
-                            <span>📦 Bank Pernyataan Carta Alir (17 Baris)</span>
+                            <span><span class="arcade-icon" aria-hidden="true">📦</span> Bank Pernyataan Carta Alir (17 Baris)</span>
                             <span class="text-xs text-slate-500 font-normal">Tarik ke slot, atau pilih langkah kemudian tekan slot</span>
                         </h3>
                         <div id="bank-fasa2" class="space-y-2.5 max-h-[380px] overflow-y-auto p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300">
@@ -1098,7 +1511,7 @@
 
                     <!-- Ruang Kerja Carta Alir -->
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-900 mb-4">📐 Ruang Binaan Carta Alir (17 Slot & Simbol Geometri)</h3>
+                        <h3 class="font-bold text-slate-900 mb-4"><span class="arcade-icon" aria-hidden="true">📐</span> Ruang Binaan Carta Alir (17 Slot & Simbol Geometri)</h3>
                         <div id="slots-fasa2" class="space-y-2.5 max-h-[450px] overflow-y-auto p-2">
                             <!-- Diisi JS -->
                         </div>
@@ -1129,7 +1542,7 @@
                     <span class="inline-block mt-4 text-xs font-semibold text-indigo-700">Pilih game →</span>
                 </button>
                 <button type="button" onclick="selectMindGame('flags')" class="text-left bg-white p-6 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition">
-                    <span class="text-3xl">🌍</span>
+                    <span class="text-3xl arcade-icon" aria-hidden="true">🌍</span>
                     <h3 class="text-lg font-bold text-slate-900 mt-3">Bendera Dunia</h3>
                     <p class="text-sm text-slate-600 mt-1">Padankan bendera dengan negara. Soalan dipilih daripada senarai bendera dunia.</p>
                     <span class="inline-block mt-4 text-xs font-semibold text-indigo-700">Pilih game →</span>
@@ -1141,7 +1554,7 @@
                     <span class="inline-block mt-4 text-xs font-semibold text-emerald-700">Pilih game →</span>
                 </button>
                 <button type="button" onclick="selectMindGame('logic')" class="text-left bg-white p-6 rounded-2xl border border-slate-200 hover:border-amber-400 hover:shadow-md transition">
-                    <span class="text-3xl">🔢</span>
+                    <span class="text-3xl arcade-icon" aria-hidden="true">🔢</span>
                     <h3 class="text-lg font-bold text-slate-900 mt-3">Corak Logik</h3>
                     <p class="text-sm text-slate-600 mt-1">Cari aturan tersembunyi dalam pola nombor dan teka-teki.</p>
                     <span class="inline-block mt-4 text-xs font-semibold text-amber-700">Pilih game →</span>
@@ -1195,7 +1608,7 @@
             </section>
 
             <section id="game-result" class="hidden max-w-2xl mx-auto bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 text-center space-y-4">
-                <div class="text-4xl">🏁</div>
+                <div class="text-4xl arcade-icon" aria-hidden="true">🏁</div>
                 <h3 class="text-2xl font-bold text-slate-900">Pusingan Tamat!</h3>
                 <p id="game-final-score" class="text-lg font-semibold text-indigo-700"></p>
                 <p id="game-result-message" class="text-sm text-slate-600"></p>
@@ -1227,6 +1640,274 @@
         </div>
     </div>
 
+    <script>
+        (() => {
+            const feeds = [
+                { name: 'Bernama', domain: 'bernama.com', locale: 'MY:en', language: 'en-MY', suffix: / - Bernama$/i },
+                { name: 'Astro Awani', domain: 'astroawani.com', locale: 'MY:ms', language: 'ms', suffix: / - (?:Astro Awani|Awani International)$/i },
+                { name: 'Berita Harian', domain: 'bharian.com.my', locale: 'MY:ms', language: 'ms', suffix: / - (?:Berita Harian|BH Online)$/i },
+                { name: 'Reuters', domain: 'reuters.com', locale: 'US:en', language: 'en-US', suffix: / - Reuters$/i },
+                { name: 'AP News', domain: 'apnews.com', locale: 'US:en', language: 'en-US', suffix: / - (?:AP News|The Associated Press)$/i }
+            ];
+            const topics = [
+                { id: 'defence', label: 'Pertahanan & siber', match: /\b(military|defence|defense|army|navy|air force|militer|tentera|pertahanan|siber|cyber|ransomware|hack|missile|drone|dron|senjata)\b/i },
+                { id: 'tech', label: 'AI & teknologi', match: /\b(ai|artificial intelligence|kecerdasan buatan|technology|teknologi|digital|gadget|telefon|phone|smartphone|robot|semiconductor|semikonduktor)\b/i },
+                { id: 'health', label: 'Kesihatan', match: /\b(health|healthcare|kesihatan|hospital|vaccine|vaksin|disease|penyakit|virus|medical|perubatan|cancer|kanser|mental)\b/i },
+                { id: 'sport', label: 'Sukan', match: /\b(sport|sukan|football|soccer|bola|liga|league|fifa|piala|cup|badminton)\b/i },
+                { id: 'culture', label: 'Malaysia & budaya', match: /\b(malaysia|malaysian|malaysians|merdeka|budaya|culture|cultural|heritage|warisan|festival|perayaan)\b/i },
+                { id: 'world', label: 'Dunia & geopolitik', match: /\b(world|global|dunia|antarabangsa|geopolitic|diplomacy|diplomatic|diplomasi|war|conflict|konflik|perang|peace|security|nations|nato|asean|united nations)\b/i }
+            ];
+            const section = document.getElementById('news-category');
+            const status = document.getElementById('news-status');
+            const list = document.getElementById('news-list');
+            const filter = document.getElementById('news-filter');
+            const refresh = document.getElementById('news-refresh');
+            const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Kuala_Lumpur', day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+            });
+            let articles = [];
+            let lastLoaded = 0;
+            let loading = false;
+            let loadMessage = '';
+            let refreshAfter = 900000;
+
+            function renderNews() {
+                const now = Date.now();
+                articles = articles.filter(article => article.time <= now && article.time > now - 86400000);
+                const visible = articles.filter(article => filter.value === 'all' || article.topics.some(topic => topic.id === filter.value));
+                list.replaceChildren();
+                visible.forEach(article => {
+                    const link = document.createElement('a');
+                    link.className = 'news-card';
+                    link.href = article.url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    const meta = document.createElement('span');
+                    meta.className = 'news-card-meta';
+                    const source = document.createElement('span');
+                    source.textContent = article.source;
+                    const topic = document.createElement('span');
+                    topic.textContent = article.topics[0]?.label || 'Umum';
+                    meta.append(source, topic);
+                    const title = document.createElement('strong');
+                    title.textContent = article.title;
+                    const time = document.createElement('small');
+                    time.textContent = `${dateFormatter.format(article.time).replaceAll('/', '-').replace(',', '')} MYT · melalui Google News ↗`;
+                    link.append(meta, title, time);
+                    list.appendChild(link);
+                });
+                status.textContent = `${loadMessage} ${visible.length} berita dipaparkan${filter.value === 'all' ? '' : ' untuk topik ini'}.`.trim();
+            }
+
+            async function fetchNewsFeed(feed) {
+                const google = new URL('https://news.google.com/rss/search');
+                google.searchParams.set('q', `when:24h site:${feed.domain}`);
+                google.searchParams.set('hl', feed.language);
+                google.searchParams.set('gl', feed.locale.split(':')[0]);
+                google.searchParams.set('ceid', feed.locale);
+                const api = new URL('https://api.rss2json.com/v1/api.json');
+                api.searchParams.set('rss_url', google.href);
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 12000);
+                try {
+                    const response = await fetch(api, { signal: controller.signal, referrerPolicy: 'no-referrer' });
+                    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const result = await response.json();
+                    if(result.status !== 'ok' || !Array.isArray(result.items)) throw new Error(result.message || 'Format suapan tidak sah');
+                    return result.items.flatMap(item => {
+                        if(typeof item.title !== 'string' || !feed.suffix.test(item.title) || typeof item.link !== 'string' || typeof item.pubDate !== 'string') return [];
+                        const rawDate = item.pubDate.trim();
+                        const timestamp = Date.parse(/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/.test(rawDate) ? `${rawDate.replace(' ', 'T')}Z` : rawDate);
+                        let url;
+                        try { url = new URL(item.link); } catch(error) { return []; }
+                        if(!Number.isFinite(timestamp) || url.protocol !== 'https:' || url.hostname !== 'news.google.com' || !url.pathname.startsWith('/rss/articles/')) return [];
+                        const title = item.title.replace(feed.suffix, '').trim();
+                        if(!title) return [];
+                        const source = / - Awani International$/i.test(item.title) ? 'Awani International' : feed.name;
+                        return [{ title, url: url.href, time: timestamp, source, topics: topics.filter(topic => topic.match.test(title)) }];
+                    });
+                } finally {
+                    clearTimeout(timeout);
+                }
+            }
+
+            async function loadNews() {
+                if(loading) return;
+                loading = true;
+                refresh.disabled = true;
+                status.textContent = 'Memuatkan berita terkini...';
+                const results = await Promise.allSettled(feeds.map(fetchNewsFeed));
+                const failed = results.flatMap((result, index) => {
+                    if(result.status === 'fulfilled') return [];
+                    console.warn(`Gagal memuatkan berita ${feeds[index].name}:`, result.reason);
+                    return [feeds[index].name];
+                });
+                const seen = new Set();
+                articles = results.flatMap(result => result.status === 'fulfilled' ? result.value : [])
+                    .sort((a, b) => b.time - a.time)
+                    .filter(article => {
+                        const key = `${article.source}:${article.title.toLocaleLowerCase()}`;
+                        if(seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                    });
+                const now = Date.now();
+                articles = articles.filter(article => article.time <= now && article.time > now - 86400000).slice(0, 40);
+                lastLoaded = now;
+                refreshAfter = failed.length ? 120000 : 900000;
+                loadMessage = failed.length
+                    ? `Tidak dapat memuatkan: ${failed.join(', ')}. Akan cuba lagi secara automatik.`
+                    : `Dikemas kini ${dateFormatter.format(now).replaceAll('/', '-').replace(',', '')} MYT; suapan mungkin dicache.`;
+                renderNews();
+                refresh.disabled = false;
+                loading = false;
+            }
+
+            section.addEventListener('toggle', () => {
+                if(section.open && (!lastLoaded || Date.now() - lastLoaded >= refreshAfter)) loadNews();
+            });
+            filter.addEventListener('change', renderNews);
+            refresh.addEventListener('click', loadNews);
+            setInterval(() => {
+                if(section.open && !document.hidden && Date.now() - lastLoaded >= refreshAfter) loadNews();
+            }, 60000);
+        })();
+    </script>
+    <script>
+        const starCanvas = document.getElementById('starfield-canvas');
+        const particleCanvas = document.getElementById('particle-canvas');
+        const starContext = starCanvas.getContext('2d');
+        const particleContext = particleCanvas.getContext('2d');
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const motionToggle = document.getElementById('motion-toggle');
+        const car = document.getElementById('arcade-car-container');
+        const carPopup = document.getElementById('car-boost-popup');
+        let stars = [];
+        let particles = [];
+        let animationFrame = null;
+        let lastFrameTime = null;
+        let boostTimer;
+        let playerXP = 0;
+
+        function isMotionReduced() {
+            return reducedMotion.matches && !document.documentElement.classList.contains('motion-override');
+        }
+
+        function resizeArcadeCanvases() {
+            starCanvas.width = particleCanvas.width = window.innerWidth;
+            starCanvas.height = particleCanvas.height = window.innerHeight;
+            stars = Array.from({ length: Math.floor(starCanvas.width * starCanvas.height / 7000) }, () => ({
+                x: Math.random() * starCanvas.width,
+                y: Math.random() * starCanvas.height,
+                size: Math.random() * 2 + .5,
+                speed: Math.random() * .5 + .1,
+                color: Math.random() > .4 ? '#FBBF24' : (Math.random() > .5 ? '#F43F5E' : '#38BDF8')
+            }));
+            particles = [];
+            if(starContext && isMotionReduced()) drawStarfield(0);
+        }
+
+        function drawStarfield(frameScale) {
+            starContext.clearRect(0, 0, starCanvas.width, starCanvas.height);
+            stars.forEach(star => {
+                star.y -= star.speed * frameScale;
+                if(star.y < 0) star.y = starCanvas.height;
+                starContext.globalAlpha = Math.abs(Math.sin(Date.now() * .002 * star.speed + star.x));
+                starContext.fillStyle = star.color;
+                starContext.fillRect(star.x, star.y, star.size, star.size);
+            });
+            starContext.globalAlpha = 1;
+        }
+
+        function renderArcadeCanvas(time) {
+            const frameScale = lastFrameTime === null ? 1 : Math.min((time - lastFrameTime) / (1000 / 60), 3);
+            lastFrameTime = time;
+            drawStarfield(frameScale);
+            particleContext.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            for(let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                particle.x += particle.vx * frameScale;
+                particle.y += particle.vy * frameScale;
+                particle.life -= .025 * frameScale;
+                if(particle.life <= 0) {
+                    particles.splice(i, 1);
+                } else {
+                    particleContext.globalAlpha = particle.life;
+                    particleContext.fillStyle = particle.color;
+                    particleContext.beginPath();
+                    particleContext.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    particleContext.fill();
+                }
+            }
+            particleContext.globalAlpha = 1;
+            animationFrame = requestAnimationFrame(renderArcadeCanvas);
+        }
+
+        function updateArcadeMotion() {
+            if(animationFrame !== null) cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+            lastFrameTime = null;
+            particles = [];
+            if(particleContext) particleContext.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            if(!starContext || !particleContext) {
+                console.error('Animasi latar tidak dapat dimulakan: canvas 2D tidak tersedia.');
+            } else if(isMotionReduced()) {
+                drawStarfield(0);
+            } else if(!document.hidden) {
+                animationFrame = requestAnimationFrame(renderArcadeCanvas);
+            }
+        }
+
+        window.addEventListener('mousemove', event => {
+            if(isMotionReduced() || document.hidden || !particleContext) return;
+            for(let i = 0; i < 2; i++) {
+                particles.push({
+                    x: event.clientX, y: event.clientY,
+                    vx: (Math.random() - .5) * 2.5,
+                    vy: (Math.random() - .5) * 2.5 - 1,
+                    size: Math.random() * 4 + 2,
+                    color: Math.random() > .5 ? '#FBBF24' : '#F43F5E',
+                    life: 1
+                });
+            }
+            if(particles.length > 600) particles.splice(0, particles.length - 600);
+        });
+
+        function boostCar() {
+            playerXP += 100;
+            document.getElementById('player-xp').textContent = `${playerXP.toLocaleString('en-US')} XP`;
+            carPopup.classList.remove('hidden');
+            car.style.animationDuration = '3s';
+            clearTimeout(boostTimer);
+            boostTimer = setTimeout(() => {
+                carPopup.classList.add('hidden');
+                car.style.animationDuration = '12s';
+            }, 2000);
+        }
+
+        window.addEventListener('resize', resizeArcadeCanvases);
+        document.addEventListener('visibilitychange', updateArcadeMotion);
+        function updateMotionToggle() {
+            const overridden = document.documentElement.classList.contains('motion-override');
+            motionToggle.classList.toggle('hidden', !reducedMotion.matches && !overridden);
+            motionToggle.setAttribute('aria-pressed', String(overridden));
+            motionToggle.textContent = overridden ? 'Ikut tetapan peranti' : 'Hidupkan animasi';
+            motionToggle.title = overridden ? 'Kembali kepada tetapan animasi peranti' : 'Peranti sedang mengurangkan animasi';
+        }
+        motionToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('motion-override');
+            updateMotionToggle();
+            updateArcadeMotion();
+        });
+        reducedMotion.addEventListener('change', () => {
+            updateMotionToggle();
+            updateArcadeMotion();
+        });
+        updateMotionToggle();
+        resizeArcadeCanvases();
+        updateArcadeMotion();
+    </script>
     <script>
         const fasa1Items = [
             "Mula",
@@ -1499,7 +2180,7 @@
 
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: emailInput.value.trim(), password });
             if(error) {
-                errorMessage.innerText = `Supabase Auth: ${error.message}`;
+                errorMessage.innerText = `Auth: ${error.message}`;
                 errorMessage.classList.remove('hidden');
                 return;
             }
@@ -1533,6 +2214,48 @@
             document.getElementById('teacher-records-view').classList.add('hidden');
             document.getElementById('teacher-flights-view').classList.add('hidden');
             document.getElementById('nav-breadcrumb').innerText = "Dashboard Guru";
+            refreshMonitoringStatus();
+        }
+
+        async function refreshMonitoringStatus() {
+            const monitors = [
+                { id: 'security-monitor-status', workflow: 'security-check.yml', maxAgeDays: 2 },
+                { id: 'supabase-monitor-status', workflow: 'supabase-activity.yml', maxAgeDays: 9 }
+            ];
+            await Promise.all(monitors.map(async monitor => {
+                const status = document.getElementById(monitor.id);
+                status.textContent = 'Memuatkan status...';
+                try {
+                    const response = await fetch(`https://api.github.com/repos/cgazri/portal/actions/workflows/${monitor.workflow}/runs?branch=main&per_page=1`, {
+                        headers: { Accept: 'application/vnd.github+json' },
+                        signal: AbortSignal.timeout(10000)
+                    });
+                    if(!response.ok) throw new Error(`GitHub HTTP ${response.status}`);
+                    const data = await response.json();
+                    if(!Array.isArray(data.workflow_runs)) throw new Error('Respons GitHub tidak sah');
+                    const run = data.workflow_runs[0];
+                    if(!run) {
+                        status.textContent = 'Belum ada rekod automasi. Semak GitHub Actions.';
+                        return;
+                    }
+                    const time = new Date(run.created_at);
+                    if(Number.isNaN(time.getTime())) throw new Error('Masa automasi tidak sah');
+                    const labels = {
+                        success: 'Berjaya', failure: 'Gagal — semak GitHub Actions',
+                        cancelled: 'Dibatalkan', timed_out: 'Masa tamat',
+                        action_required: 'Perlu tindakan', skipped: 'Dilangkau',
+                        neutral: 'Tidak dapat dipastikan', stale: 'Tamat tempoh'
+                    };
+                    const result = run.status === 'completed'
+                        ? (labels[run.conclusion] || `Status tidak diketahui (${run.conclusion || 'tiada keputusan'})`)
+                        : `Sedang berjalan / menunggu (${run.status || 'tidak diketahui'})`;
+                    const ageWarning = Date.now() - time.getTime() > monitor.maxAgeDays * 86400000
+                        ? ' · Rekod lama; semak jadual.' : '';
+                    status.textContent = `${result} · ${time.toLocaleString('ms-MY', { timeZone: 'Asia/Kuala_Lumpur', dateStyle: 'medium', timeStyle: 'short' })}${ageWarning}`;
+                } catch(error) {
+                    status.textContent = `Status tidak tersedia (${error.message}). Semak GitHub Actions.`;
+                }
+            }));
         }
 
         async function openTeacherRecords() {
@@ -2531,6 +3254,7 @@
             }
             if(!window.Chart) return;
             const seriesByKey = new Map();
+            const arcadeChartColors = ['#a78bfa', '#fbbf24', '#f43f5e', '#34d399', '#38bdf8', '#c084fc', '#fb923c'];
             rows.forEach(row => {
                 const airline = normalizeAirlineName(row.airline);
                 const originKey = airportKey(row.origin);
@@ -2538,8 +3262,12 @@
                 if(!seriesByKey.has(key)) seriesByKey.set(key, { key, airline, origin: row.origin });
             });
             const series = [...seriesByKey.values()];
-            series.forEach(item => {
+            series.forEach((item, index) => {
                 const entry = createAirlineDisplay(item.airline, true);
+                const marker = document.createElement('span');
+                marker.style.cssText = `width:.7rem;height:.7rem;flex:none;border-radius:50%;background:${arcadeChartColors[index % arcadeChartColors.length]};`;
+                marker.setAttribute('aria-hidden', 'true');
+                entry.prepend(marker);
                 const origin = document.createElement('span');
                 origin.className = 'rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600';
                 origin.textContent = airportShortLabel(item.origin);
@@ -2578,34 +3306,42 @@
             const textColor = '#e9ddff';
             const gridColor = 'rgba(196,181,253,.2)';
             const origins = [...new Set(series.map(item => airportKey(item.origin)))];
-            const arcadeChartColors = ['#a78bfa', '#fbbf24', '#f43f5e', '#34d399', '#38bdf8', '#c084fc', '#fb923c'];
+            const dates = [...new Set(rows.map(row => row.checked_on))];
+            const dateIndexes = new Map(dates.map((date, index) => [date, index]));
             const datasets = series.map((item, index) => ({
                 label: `${getAirlineBrand(item.airline)?.code || item.airline} · ${airportShortLabel(item.origin)}`,
-                data: rows.map((row, rowIndex) => {
+                data: rows.flatMap((row, rowIndex) => {
                     const rowSeriesKey = `${normalizeAirlineName(row.airline)}|${airportKey(row.origin)}`;
-                    return rowSeriesKey === item.key ? values[rowIndex] : null;
+                    return rowSeriesKey === item.key && values[rowIndex] !== null
+                        ? [{ x: dateIndexes.get(row.checked_on), y: values[rowIndex], rowIndex }]
+                        : [];
                 }),
                 borderColor: arcadeChartColors[index % arcadeChartColors.length],
                 backgroundColor: arcadeChartColors[index % arcadeChartColors.length],
                 borderDash: origins.indexOf(airportKey(item.origin)) ? [6, 4] : [],
                 spanGaps: true,
                 tension: 0.25,
+                borderWidth: 3,
                 pointRadius: 5,
+                pointBorderColor: '#f5f2fa',
+                pointBorderWidth: 2,
                 pointHoverRadius: 8
             }));
             flightChart = new Chart(canvas, {
                 type: 'line',
-                data: { labels: rows.map(row => fmtDate(row.checked_on)), datasets },
+                data: { labels: dates.map(fmtDate), datasets },
                 options: {
+                    parsing: false,
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: { duration: 700, easing: 'easeOutQuart' },
+                    animation: { duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900, easing: 'easeOutQuart' },
                     interaction: { mode: 'nearest', intersect: true },
                     onClick: (event, elements) => {
                         if(!elements.length) return;
                         const { datasetIndex, index } = elements[0];
-                        const row = rows[index];
-                        if(row && datasets[datasetIndex].data[index] !== null) showFlightDetail(row, targetCurrency);
+                        const point = datasets[datasetIndex].data[index];
+                        const row = point && rows[point.rowIndex];
+                        if(row) showFlightDetail(row, targetCurrency);
                     },
                     plugins: {
                         legend: { display: false },
@@ -2613,7 +3349,7 @@
                             enabled: true,
                             callbacks: {
                                 label: context => {
-                                    const row = rows[context.dataIndex];
+                                    const row = rows[context.raw.rowIndex];
                                     if(!row) return context.dataset.label;
                                     const convertedPrice = getConvertedPriceValue(row, targetCurrency);
                                     const price = convertedPrice === null
@@ -3357,7 +4093,7 @@
         async function submitFasa2Answers() {
             fasa2Score = calculatePhaseScore('#slots-fasa2 .slot-box');
             const totalScore = fasa1Score + fasa2Score;
-            let saveMessage = "Rekod markah berjaya disimpan ke Supabase.";
+            let saveMessage = "Rekod markah berjaya disimpan.";
             try {
                 if(!resultSubmitted) {
                     await saveStudentRecord(totalScore);

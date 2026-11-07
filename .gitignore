@@ -1,0 +1,12 @@
+# This workspace also contains private documents. Only allow project paths by default.
+/*
+!/.gitignore
+!/.gitleaksignore
+!/main.html
+!/favicon.svg
+!/SECURITY-REVIEW.md
+!/assets/
+!/.github/
+!/scripts/
+!/supabase/
+!/docs/
