@@ -38,6 +38,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y clamav
+          sudo systemctl stop clamav-freshclam
           sudo freshclam
       - name: Scan checked-out files
         run: clamscan --recursive --infected --no-summary --exclude-dir='(^|/)\.git($|/)' .
